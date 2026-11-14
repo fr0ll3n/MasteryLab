@@ -1,0 +1,34 @@
+@model MathematicsLessons.Models.BookingPage
+@{ ViewData["Title"] = "Private lesson"; }
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+  <div>
+    <h1 class="page-title">Private lesson</h1>
+    <p class="page-lead mb-0">Plan: @Model.PlanName · @Model.SessionsLeftThisMonth sessions left this month</p>
+  </div>
+  <a class="btn btn-primary" asp-action="Book"><i class="bi bi-calendar-plus"></i> Book session</a>
+</div>
+@if (Model.Upcoming != null)
+{
+  <div class="card mb-4 border-primary">
+    <div class="card-body">
+      <div class="fw-semibold">Upcoming session</div>
+      <div>@Model.Upcoming.Date.ToString("dd MMM yyyy HH:mm") · @Model.Upcoming.DurationMinutes min</div>
+      <a class="btn btn-sm btn-primary mt-2" asp-action="Session" asp-route-id="@Model.Upcoming.Id">Open panel</a>
+    </div>
+  </div>
+}
+<h2 class="h6 text-muted text-uppercase">My bookings</h2>
+@if (!Model.Mine.Any())
+{ <p class="text-muted">No bookings yet.</p> }
+else
+{
+  <div class="list-group">
+  @foreach (var a in Model.Mine)
+  {
+    <div class="list-group-item bg-transparent border-secondary-subtle d-flex justify-content-between align-items-center">
+      <span>@a.Date.ToString("g") · @a.DurationMinutes min · @a.Status</span>
+      <a class="btn btn-sm btn-outline-secondary" asp-action="Session" asp-route-id="@a.Id">Details</a>
+    </div>
+  }
+  </div>
+}

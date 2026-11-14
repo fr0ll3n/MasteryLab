@@ -1,0 +1,98 @@
+@model MathematicsLessons.Models.LessonPage
+@{
+    ViewData["Title"] = Model.Lesson.Title;
+    var isStaff = User.IsInRole("Teacher") || User.IsInRole("Admin");
+    var showExercises = Model.CanPractice || (Model.VideoWatched && !Model.ExercisesPassed);
+}
+<a class="course-back" asp-action="Level" asp-route-id="@Model.Lesson.LevelId"><i class="bi bi-arrow-left"></i> Back to course</a>
+<h1 class="page-title">@Model.Lesson.Title</h1>
+<p class="page-lead">@Model.Lesson.Topic?.Name</p>
+<div class="row g-4">
+  <div class="col-lg-8">
+    @if (!string.IsNullOrEmpty(Model.Lesson.Video))
+    {
+      <div class="card mb-3"><div class="card-body p-2">
+        <video id="lessonVideo" class="w-100 rounded" style="max-height:480px;background:#000" controls src="@Model.Lesson.Video"></video>
+      </div></div>
+    }
+    else { <div class="alert alert-secondary">No video yet.</div> }
+    <div class="card mb-3"><div class="card-body" style="white-space:pre-line">@Model.Lesson.Content</div></div>
+    @if ((Model.IsUnlocked || isStaff) && showExercises)
+    {
+      <div class="card" id="exercisePanel">
+        <div class="card-body">
+          <h2 class="h5 mb-1">Exercises</h2>
+          <p class="small text-muted">Pass to unlock the next lesson. Fail → watch the video again.</p>
+          <form asp-action="SubmitExercises" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Lesson.Id" />
+            @if (Model.Exercises == null || !Model.Exercises.Any())
+            { <p class="text-muted">No questions — submit to complete.</p> }
+            else
+            {
+              var i = 0;
+              foreach (var ex in Model.Exercises)
+              {
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">@(i + 1). @ex.Question</label>
+                  <input type="text" name="answers[@i]" class="form-control" required autocomplete="off" />
+                  @if (!string.IsNullOrEmpty(ex.Hint)) { <div class="form-text">Hint: @ex.Hint</div> }
+                </div>
+                i++;
+              }
+            }
+            <button type="submit" class="btn btn-primary">Check answers</button>
+          </form>
+        </div>
+      </div>
+    }
+    else if ((Model.IsUnlocked || isStaff) && !Model.VideoWatched && !isStaff)
+    {
+      <p class="small text-muted">Watch the video to the end — exercises appear below.</p>
+      <form id="watchedForm" asp-action="MarkVideoWatched" method="post" class="d-none">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Lesson.Id" />
+      </form>
+    }
+    else if (Model.ExercisesPassed)
+    {
+      <div class="alert alert-success">Lesson complete. Next lesson unlocked.</div>
+      <a class="btn btn-primary" asp-action="Level" asp-route-id="@Model.Lesson.LevelId">Back to course</a>
+      @if (Model.NextLesson != null)
+      { <a class="btn btn-outline-secondary ms-2" asp-action="Lesson" asp-route-id="@Model.NextLesson.Id">Next lesson</a> }
+    }
+  </div>
+  <div class="col-lg-4">
+    @if (Model.CanUpload)
+    {
+      <div class="card mb-3"><div class="card-body">
+        <h2 class="h6">Video (Teacher / Admin)</h2>
+        @if (!string.IsNullOrEmpty(Model.Lesson.Video))
+        {
+          <form asp-action="RemoveVideo" method="post" class="mb-2" onsubmit="return confirm('Remove?');">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Lesson.Id" />
+            <button type="submit" class="btn btn-sm btn-outline-secondary">Remove video</button>
+          </form>
+        }
+        <form asp-action="Upload" method="post" enctype="multipart/form-data">
+          @Html.AntiForgeryToken()
+          <input type="hidden" name="id" value="@Model.Lesson.Id" />
+          <input type="file" name="video" accept="video/*" class="form-control mb-2" required />
+          <button type="submit" class="btn btn-primary btn-sm w-100">Upload / Replace</button>
+        </form>
+      </div></div>
+    }
+    <div class="card"><div class="card-body small text-muted">
+      <div>Progress: @Model.WatchedPercent%</div>
+      <div>Video: @(Model.VideoWatched ? "watched" : "not finished")</div>
+      <div>Exercises: @(Model.ExercisesPassed ? "passed" : "pending")</div>
+    </div></div>
+  </div>
+</div>
+@section Scripts {
+<script>
+(function(){var v=document.getElementById('lessonVideo'),f=document.getElementById('watchedForm');
+if(v&&f)v.addEventListener('ended',function(){f.submit();});})();
+</script>
+}

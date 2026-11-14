@@ -1,0 +1,38 @@
+@model MathematicsLessons.Models.TeacherStudentProgressPage
+@{ ViewData["Title"] = Model.Student.DisplayName; var s = Model.Student; }
+<a class="course-back" asp-action="Students">← Students</a>
+<h1 class="page-title">@s.DisplayName</h1>
+<p class="page-lead">@s.Email · @s.Plan · @s.Points pts · streak @s.StreakDays · @s.CompletedLessons/@s.TotalLessons lessons</p>
+
+@foreach (var lv in Model.Levels)
+{
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
+        <h2 class="h6 mb-0">@lv.LevelName</h2>
+        <div>
+          @if (lv.HasCertificate) { <span class="badge-soft green me-1">Certificate</span> }
+          <span class="small text-muted">@lv.Completed / @lv.Total · @lv.Percent%</span>
+        </div>
+      </div>
+      <div class="progress mb-3"><div class="progress-bar" style="width:@lv.Percent%"></div></div>
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead><tr class="small text-muted"><th>Lesson</th><th>Topic</th><th>Video</th><th>Exercises</th><th>Done</th></tr></thead>
+          <tbody>
+          @foreach (var les in lv.Lessons)
+          {
+            <tr>
+              <td>@les.Title</td>
+              <td class="small text-muted">@les.TopicName</td>
+              <td>@(les.VideoWatched ? "✓" : "—")</td>
+              <td>@(les.ExercisesPassed ? "✓" : "—")</td>
+              <td>@(les.IsCompleted ? "✓" : $"{les.WatchedPercent}%")</td>
+            </tr>
+          }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+}

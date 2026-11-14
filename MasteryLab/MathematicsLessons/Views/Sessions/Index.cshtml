@@ -1,0 +1,32 @@
+@{
+  ViewData["Title"] = "Public sessions";
+  var list = Model as IEnumerable<MathematicsLessons.Infrastructure.Data.Entities.Schedule>
+             ?? ViewBag.Sessions as IEnumerable<MathematicsLessons.Infrastructure.Data.Entities.Schedule>;
+}
+<h1 class="page-title">Discord / public sessions</h1>
+<p class="page-lead">Weekly Q&amp;A channels for exercises that need extra explanation.</p>
+<div class="card mb-3">
+  <div class="card-body">
+    <p class="mb-2">Join the public Discord channel announced by teachers for live help.</p>
+    <a class="btn btn-primary btn-sm" href="https://discord.com" target="_blank" rel="noopener">Open Discord</a>
+  </div>
+</div>
+@if (list != null && list.Any())
+{
+  <div class="row g-3">
+  @foreach (var s in list)
+  {
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h6">@s.Title</h2>
+          <p class="small text-muted mb-1">@s.SelectedDateTime.ToString("g") · @s.DurationMinutes min</p>
+          <p class="small mb-0">Channel: @s.DiscordChannel</p>
+        </div>
+      </div>
+    </div>
+  }
+  </div>
+}
+else
+{ <p class="text-muted">No scheduled public sessions yet.</p> }

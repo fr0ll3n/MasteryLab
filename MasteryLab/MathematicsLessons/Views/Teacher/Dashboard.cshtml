@@ -1,0 +1,42 @@
+@model MathematicsLessons.Models.TeacherDashboard
+@{ ViewData["Title"] = "Teacher"; }
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="page-title mb-0">Teacher dashboard</h1>
+  <div class="d-flex gap-2">
+    <a class="btn btn-sm btn-primary" asp-action="Students">Student progress</a>
+    <a class="btn btn-sm btn-outline-secondary" asp-controller="CourseAdmin" asp-action="Index">Manage courses</a>
+  </div>
+</div>
+<div class="row g-3 mb-4">
+  <div class="col-md-4"><div class="card"><div class="card-body">
+    <div class="small text-muted">Learners</div><div class="h3 mb-0">@Model.TotalStudents</div>
+  </div></div></div>
+  <div class="col-md-4"><div class="card"><div class="card-body">
+    <div class="small text-muted">Lessons without video</div><div class="h3 mb-0">@Model.LessonsWithoutVideo</div>
+  </div></div></div>
+  <div class="col-md-4"><div class="card"><div class="card-body">
+    <div class="small text-muted">Upcoming bookings</div><div class="h3 mb-0">@Model.UpcomingBookings</div>
+  </div></div></div>
+</div>
+@if (Model.RecentBookings.Any())
+{
+  <h2 class="h6 text-muted">Upcoming private lessons</h2>
+  <div class="list-group mb-4">
+  @foreach (var a in Model.RecentBookings)
+  {
+    <div class="list-group-item bg-transparent">
+      @a.Date.ToString("g") · @a.User?.DisplayName · @a.AppointmentPlan?.Name
+    </div>
+  }
+  </div>
+}
+@if (Model.MissingVideos.Any())
+{
+  <h2 class="h6 text-muted">Missing videos (sample)</h2>
+  <ul class="small">
+  @foreach (var l in Model.MissingVideos.Take(10))
+  {
+    <li>@l.Level?.Name — @l.Title</li>
+  }
+  </ul>
+}

@@ -1,0 +1,138 @@
+@{
+    ViewData["Title"] = "Home";
+    var loggedIn = ViewBag.IsLoggedIn as bool? ?? (User.Identity?.IsAuthenticated == true);
+    var continueId = ViewBag.ContinueLessonId as int?;
+    var continueTitle = ViewBag.ContinueLessonTitle as string;
+    var continueLevel = ViewBag.ContinueLevelName as string;
+    var continueTopic = ViewBag.ContinueTopicName as string;
+    var completed = ViewBag.CompletedLessons as int? ?? 0;
+    var points = ViewBag.UserPoints as int? ?? 0;
+    var streak = ViewBag.UserStreak as int? ?? 0;
+    var levels = ViewBag.Levels as IEnumerable<MathematicsLessons.Controllers.CourseStatVm>;
+}
+@if (!loggedIn)
+{
+    <div class="pz-hero">
+        <div class="pz-hero-inner">
+            <div class="pz-pill">Guided practice</div>
+            <h1>Build real math intuition</h1>
+            <p>
+                Short lessons, then exercises that unlock the next step —
+                from primary school through university topics.
+            </p>
+            <a class="btn btn-primary me-2" asp-area="Identity" asp-page="/Account/Register">Start learning</a>
+            <a class="btn btn-outline-secondary" style="background:rgba(255,255,255,.08);color:#fff;border-color:rgba(255,255,255,.25)"
+               asp-area="Identity" asp-page="/Account/Login">Log in</a>
+        </div>
+    </div>
+
+    <p class="section-label">How MasteryLab works</p>
+    <div class="row g-3 mb-5">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <img class="card-img-top" alt="" src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=700&q=80" />
+                <div class="card-body">
+                    <h3 class="h6 fw-bold">Learn in sequence</h3>
+                    <p class="small text-muted mb-0">Finish a video, pass the exercises, unlock the next lesson.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <img class="card-img-top" alt="" src="https://images.unsplash.com/photo-1509228468518-180dd4864904?w=700&q=80" />
+                <div class="card-body">
+                    <h3 class="h6 fw-bold">Four clear levels</h3>
+                    <p class="small text-muted mb-0">Beginner (1–4), Intermediate (5–7), Advanced (8–12), and College.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <img class="card-img-top" alt="" src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=700&q=80" />
+                <div class="card-body">
+                    <h3 class="h6 fw-bold">Help when stuck</h3>
+                    <p class="small text-muted mb-0">Subscribers can book private lessons and join public Discord Q&amp;A.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (levels != null && levels.Any())
+    {
+        <p class="section-label">Catalog at a glance</p>
+        <div class="row g-3 mb-4">
+        @foreach (var lv in levels)
+        {
+            <div class="col-6 col-md-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="badge-soft mb-2">@lv.Name</div>
+                        <div class="small text-muted">@lv.GradeRange</div>
+                        <div class="small mt-2">@lv.TopicCount sections · @lv.LessonCount lessons</div>
+                    </div>
+                </div>
+            </div>
+        }
+        </div>
+    }
+
+    <div class="card mb-4" style="background:var(--pz-primary-soft);border-color:transparent!important">
+        <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <h2 class="h5 mb-1 fw-bold">Try the first lesson free</h2>
+                <p class="small text-muted mb-0">No card required. Upgrade later for full catalog access.</p>
+            </div>
+            <a class="btn btn-primary" asp-area="Identity" asp-page="/Account/Register">Create account</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="pz-hero" style="min-height:220px">
+        <div class="pz-hero-inner py-4">
+            <div class="pz-pill">Your path</div>
+            <h1 style="font-size:1.75rem">Continue learning</h1>
+            @if (continueId != null && !string.IsNullOrEmpty(continueTitle))
+            {
+                <p class="mb-1">@continueLevel@(!string.IsNullOrEmpty(continueTopic) ? " · " + continueTopic : "")</p>
+                <p class="mb-3 fw-semibold" style="color:#fff">@continueTitle</p>
+                <a class="btn btn-primary me-2" asp-controller="Classroom" asp-action="Lesson" asp-route-id="@continueId">
+                    Continue lesson
+                </a>
+            }
+            else
+            {
+                <p class="mb-3">Open the catalog and pick a course.</p>
+            }
+            <a class="btn btn-outline-secondary" style="background:rgba(255,255,255,.08);color:#fff;border-color:rgba(255,255,255,.25)"
+               asp-controller="Classroom" asp-action="Index">All courses</a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card"><div class="card-body">
+                <div class="small text-muted">Completed lessons</div>
+                <div class="h3 mb-0">@completed</div>
+            </div></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card"><div class="card-body">
+                <div class="small text-muted">Points</div>
+                <div class="h3 mb-0">@points</div>
+            </div></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card"><div class="card-body">
+                <div class="small text-muted">Day streak</div>
+                <div class="h3 mb-0">@streak</div>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-primary" asp-controller="Classroom" asp-action="Index">Courses</a>
+        <a class="btn btn-outline-secondary" asp-controller="Subscription" asp-action="Plans">Subscription</a>
+        <a class="btn btn-outline-secondary" asp-controller="Account" asp-action="Profile">Profile</a>
+    </div>
+}

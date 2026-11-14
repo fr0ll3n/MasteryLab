@@ -1,0 +1,55 @@
+@model List<MathematicsLessons.Infrastructure.Data.Entities.Notification>
+@{
+    ViewData["Title"] = "Notifications";
+    var unread = Model.Count(n => !n.IsRead);
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <div>
+    <h1 class="page-title mb-0">Notifications</h1>
+    <p class="small text-muted mb-0">@unread unread · @Model.Count total</p>
+  </div>
+  @if (unread > 0)
+  {
+    <form asp-action="MarkAllRead" method="post">
+      @Html.AntiForgeryToken()
+      <button type="submit" class="btn btn-sm btn-outline-secondary">Mark all read</button>
+    </form>
+  }
+</div>
+
+@if (!Model.Any())
+{
+  <div class="card"><div class="card-body text-muted">No notifications yet. Complete lessons or subscribe to see updates here.</div></div>
+}
+else
+{
+  @foreach (var n in Model)
+  {
+    <div class="card mb-2 @(n.IsRead ? "" : "")" style="@(n.IsRead ? "opacity:.72" : "border-color:var(--pz-primary)!important")">
+      <div class="card-body py-3">
+        <div class="d-flex flex-wrap justify-content-between gap-2">
+          <div>
+            <div class="fw-semibold">
+              @if (!n.IsRead) { <span class="badge-soft me-1">New</span> }
+              @n.Title
+            </div>
+            <div class="small text-muted mb-1">@n.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</div>
+            <p class="mb-2 small">@n.Body</p>
+            @if (!string.IsNullOrEmpty(n.Link))
+            {
+              <a class="btn btn-sm btn-primary" href="@n.Link">Open</a>
+            }
+          </div>
+          @if (!n.IsRead)
+          {
+            <form asp-action="MarkRead" method="post">
+              @Html.AntiForgeryToken()
+              <input type="hidden" name="id" value="@n.Id" />
+              <button type="submit" class="btn btn-sm btn-outline-secondary">Mark read</button>
+            </form>
+          }
+        </div>
+      </div>
+    </div>
+  }
+}
