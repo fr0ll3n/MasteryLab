@@ -12,7 +12,7 @@ public class Exercise
     [Required]
     public string Question { get; set; } = "";
 
-    [Required, MaxLength(200)]
+    [Required, MaxLength(500)]
     public string Solution { get; set; } = "";
 
     [MaxLength(300)]

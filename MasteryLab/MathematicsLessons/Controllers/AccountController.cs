@@ -41,4 +41,18 @@ public class AccountController : Controller
             LevelNames = levelNames
         });
     }
+
+    [HttpGet]
+    public async Task<IActionResult> Certificate(int id)
+    {
+        var me = await _users.GetUserAsync(User);
+        if (me == null) return Challenge();
+        var cert = await _ctx.Certificates.AsNoTracking()
+            .Include(c => c.Level)
+            .FirstOrDefaultAsync(c => c.Id == id && c.UserId == me.Id);
+        if (cert == null) return NotFound();
+        ViewBag.DisplayName = me.DisplayName;
+        return View(cert);
+    }
 }
+

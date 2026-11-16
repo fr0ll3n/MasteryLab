@@ -341,167 +341,161 @@ public static class CatalogSeed
 
     private static IEnumerable<(string q, string sol, string hint, int pts)> BuildExercises(int levelId, string title)
     {
-        var t = title.ToLowerInvariant();
+        // Count by difficulty: Beginner 10, Intermediate 12, Advanced 14, College 15
+        int count = levelId switch { 1 => 14, 2 => 16, 3 => 18, _ => 20 };
+        var t = (title ?? "").ToLowerInvariant();
+        int salt = Math.Abs((title ?? "").GetHashCode());
+
+        var pool = new List<(string q, string sol, string hint, int pts)>();
+
+        void Add(string q, string sol, string hint, int pts) => pool.Add((q, sol, hint, pts));
+
+        // --- Shared arithmetic variants (deterministic from salt) ---
+        for (int k = 0; k < 30; k++)
+        {
+            int a = 2 + (salt + k * 7) % 18;
+            int b = 1 + (salt + k * 3) % 12;
+            Add($"Колко е {a} + {b}?", $"{a + b}", $"Събери {a} и {b}.", 8);
+            Add($"Колко е {a + b} − {b}?", $"{a}", $"Извади {b} от {a + b}.", 8);
+            if (b != 0 && a % b == 0)
+                Add($"Колко е {a} ÷ {b}?", $"{a / b}", $"Деление.", 10);
+            Add($"Колко е {Math.Min(a, 9)} × {Math.Min(b, 9)}?", $"{Math.Min(a, 9) * Math.Min(b, 9)}", "Умножение.", 10);
+        }
 
         if (levelId == 1)
         {
-            if (t.Contains("броен") || t.Contains("числа до 10") || t.Contains("до 10") && t.Contains("числ"))
+            if (t.Contains("дроб") || t.Contains("половин"))
             {
-                yield return ("Колко е 3 + 2?", "5", "Събери 3 и 2", 10);
-                yield return ("Кое е по-голямо: 7 или 4? (по-голямото число)", "7", "Сравни", 10);
-                yield return ("Колко е 9 − 4?", "5", "Извади", 10);
-                yield break;
+                Add("Каква част е 1 от 2 равни части? (1/2)", "1/2", "Една от две.", 12);
+                Add("Колко половини правят едно цяло?", "2", "1/2 + 1/2 = 1.", 12);
+                Add("Колко е 1/4 + 1/4? (като дроб)", "1/2", "Еднакви знаменатели.", 12);
+                Add("Коя дроб е по-голяма: 1/3 или 1/2? (напиши по-голямата)", "1/2", "По-малък знаменател при числител 1.", 12);
+                Add("Колко е 3/4 − 1/4?", "1/2", "3/4 − 1/4 = 2/4 = 1/2.", 12);
             }
-            if (t.Contains("събир") || t.Contains("изважд"))
+            if (t.Contains("фигур") || t.Contains("триъгъл") || t.Contains("квадрат") || t.Contains("ъгл") || t.Contains("геометр") || t.Contains("кръг") || t.Contains("отсечк"))
             {
-                yield return ("Колко е 6 + 3?", "9", "Събери", 10);
-                yield return ("Колко е 8 − 5?", "3", "Извади", 10);
-                yield return ("Колко е 4 + 4?", "8", "Удвояване", 10);
-                yield break;
-            }
-            if (t.Contains("умнож") || t.Contains("делени") || t.Contains("таблица"))
-            {
-                yield return ("Колко е 2 × 5?", "10", "2 по 5", 10);
-                yield return ("Колко е 3 × 3?", "9", "3 по 3", 10);
-                yield return ("Колко е 12 ÷ 4?", "3", "Деление", 10);
-                yield break;
-            }
-            if (t.Contains("дроб"))
-            {
-                yield return ("Каква част е 1 от 2? (напиши 1/2)", "1/2", "Половина", 10);
-                yield return ("Колко половини правят едно цяло?", "2", "1/2+1/2", 10);
-                yield break;
+                Add("Колко страни има триъгълникът?", "3", "Три страни.", 10);
+                Add("Колко върха има квадратът?", "4", "Четири върха.", 10);
+                Add("Колко прави ъгъла има правоъгълникът?", "4", "Всички ъгли са 90°.", 10);
+                Add("Квадрат със страна 4 — периметър?", "16", "4 × 4.", 12);
+                Add("Квадрат със страна 6 — лице?", "36", "6 × 6.", 12);
             }
             if (t.Contains("лице") || t.Contains("периметр") || t.Contains("правоъгъл"))
             {
-                yield return ("Правоъгълник 3×4 — периметър?", "14", "2*(3+4)", 15);
-                yield return ("Квадрат страна 5 — лице?", "25", "5*5", 15);
-                yield break;
+                Add("Правоъгълник 3×5 — периметър?", "16", "2×(3+5).", 12);
+                Add("Правоъгълник 4×7 — лице?", "28", "4×7.", 12);
+                Add("Правоъгълник 2×9 — периметър?", "22", "2×(2+9).", 12);
+                Add("Квадрат страна 8 — лице?", "64", "8×8.", 12);
             }
-            if (t.Contains("фигур") || t.Contains("триъгъл") || t.Contains("кръг") || t.Contains("ъгл") || t.Contains("квадрат") || t.Contains("отсечк"))
+            if (t.Contains("умнож") || t.Contains("таблица") || t.Contains("делени"))
             {
-                yield return ("Колко страни има триъгълникът?", "3", "Три", 10);
-                yield return ("Колко върха има квадратът?", "4", "Четири", 10);
-                yield break;
+                for (int n = 2; n <= 9; n++)
+                {
+                    int m = 2 + (salt + n) % 8;
+                    Add($"Колко е {n} × {m}?", $"{n * m}", $"Таблица: {n} по {m}.", 10);
+                }
             }
-            yield return ("Колко е 5 + 7?", "12", "Събери", 10);
-            yield return ("Колко е 10 − 6?", "4", "Извади", 10);
-            yield break;
         }
-
-        if (levelId == 2)
+        else if (levelId == 2)
         {
+            Add("Ако x + 7 = 15, колко е x?", "8", "x = 15 − 7.", 14);
+            Add("Ако 3x = 18, колко е x?", "6", "x = 18 / 3.", 14);
+            Add("Ако x − 9 = 4, колко е x?", "13", "x = 4 + 9.", 14);
+            Add("Колко е 20% от 150?", "30", "0.2 × 150.", 14);
+            Add("Колко е 25% от 80?", "20", "Четвърт от 80.", 14);
+            Add("Колко е 1/2 + 1/4? (дроб)", "3/4", "Общ знаменател 4.", 14);
+            Add("Запиши 0.25 като дроб.", "1/4", "25/100 = 1/4.", 14);
+            Add("Катети 3 и 4 — хипотенуза?", "5", "3²+4²=25, √25=5.", 16);
+            Add("Катети 6 и 8 — хипотенуза?", "10", "Удвоен 3-4-5.", 16);
+            Add("Лице на правоъгълник 12×5?", "60", "a×b.", 12);
+            Add("Ако 2/5 = x/20, колко е x?", "8", "Кръстосано: 2×20=5x.", 16);
+            Add("Опростете 4:8 (като a:b)", "1:2", "Раздели на 4.", 12);
             if (t.Contains("дроб") || t.Contains("десетич"))
             {
-                yield return ("Колко е 1/4 + 1/4? (дроб)", "1/2", "Еднакви знаменатели", 15);
-                yield return ("Запиши 0.5 като дроб.", "1/2", "Половина", 15);
-                yield return ("Колко е 0.2 + 0.3?", "0.5", "Десетични", 15);
-                yield break;
+                Add("Колко е 2/3 + 1/3?", "1", "Общ знаменател.", 14);
+                Add("Колко е 0.1 + 0.2?", "0.3", "Десетични.", 12);
+                Add("Колко е 5/6 − 1/6?", "2/3", "4/6 = 2/3.", 14);
             }
             if (t.Contains("процент"))
             {
-                yield return ("Колко е 10% от 200?", "20", "10/100*200", 15);
-                yield return ("Колко е 50% от 80?", "40", "Половина", 15);
-                yield break;
+                Add("Колко е 15% от 200?", "30", "0.15×200.", 14);
+                Add("Колко е 5% от 60?", "3", "0.05×60.", 14);
             }
-            if (t.Contains("уравнен") || t.Contains("неравен") || t.Contains("неизвестн") || t.Contains("израз"))
+        }
+        else if (levelId == 3)
+        {
+            Add("Дискриминанта на x² − 5x + 6?", "1", "25 − 24 = 1.", 18);
+            Add("Дискриминанта на x² − 4x + 4?", "0", "16 − 16 = 0.", 18);
+            Add("Един корен на x² − 5x + 6 = 0 е 2. Другият?", "3", "Сума 5, произведение 6.", 18);
+            Add("y = 2x + 1 при x = 4 — y?", "9", "2×4+1.", 16);
+            Add("Ъглов коефициент на y = −3x + 5?", "-3", "Числото пред x.", 16);
+            Add("log₁₀(1000)?", "3", "10³ = 1000.", 18);
+            Add("2⁵?", "32", "2×2×2×2×2.", 14);
+            Add("sin(30°) като дроб?", "1/2", "Стандартна стойност.", 18);
+            Add("cos(0°)?", "1", "cos 0 = 1.", 14);
+            Add("3! = ?", "6", "3×2×1.", 16);
+            Add("4! = ?", "24", "4×3×2×1.", 16);
+            Add("Обем на куб a=4?", "64", "a³.", 16);
+            Add("Повърхнина на куб a=3 (6a²)?", "54", "6×9.", 16);
+            Add("(−5)² = ?", "25", "Квадратът е положителен.", 14);
+            Add("√81 = ?", "9", "9×9=81.", 14);
+            if (t.Contains("квадратн") || t.Contains("корен") || t.Contains("виет"))
             {
-                yield return ("Ако x + 5 = 12, колко е x?", "7", "12-5", 15);
-                yield return ("Ако 2x = 10, колко е x?", "5", "10/2", 15);
-                yield break;
+                Add("Сума на корените на x² − 7x + 10 = 0?", "7", "Виет: −b/a.", 20);
+                Add("Произведение на корените на x² − 7x + 10 = 0?", "10", "Виет: c/a.", 20);
             }
-            if (t.Contains("питагор") || t.Contains("лице") || t.Contains("геометр") || t.Contains("ъгл") || t.Contains("триъгъл") || t.Contains("окръжн"))
-            {
-                yield return ("Катети 3 и 4 — хипотенуза?", "5", "3-4-5", 15);
-                yield return ("Лице на правоъгълник 6×5?", "30", "a*b", 15);
-                yield break;
-            }
-            if (t.Contains("пропорц") || t.Contains("отношен"))
-            {
-                yield return ("Ако 2/5 = x/10, колко е x?", "4", "Кръстосано", 15);
-                yield return ("Отношение 3:6 опростено? (1:2)", "1:2", "Раздели на 3", 15);
-                yield break;
-            }
-            yield return ("Колко е 15% от 100?", "15", "15 процента", 15);
-            yield return ("Ако x − 4 = 9, колко е x?", "13", "9+4", 15);
-            yield break;
+        }
+        else
+        {
+            // College
+            Add("Производна на x²? (напиши 2x)", "2x", "n·x^(n−1).", 22);
+            Add("Производна на x³? (напиши 3x^2)", "3x^2", "3x².", 22);
+            Add("Производна на константа 7?", "0", "Константата няма наклон.", 18);
+            Add("Производна на x?", "1", "Наклон 1.", 18);
+            Add("∫ 2x dx без C? (x^2)", "x^2", "Обратно на 2x.", 22);
+            Add("∫ 3x^2 dx без C? (x^3)", "x^3", "Обратно на 3x².", 22);
+            Add("det|1 0; 0 1|?", "1", "Единична матрица.", 22);
+            Add("det|2 0; 0 4|?", "8", "2×4.", 22);
+            Add("det|1 2; 3 4|?", "-2", "1×4 − 2×3.", 24);
+            Add("Средно на 3, 5, 7?", "5", "(3+5+7)/3.", 18);
+            Add("lim x→0 на x?", "0", "Клони към 0.", 18);
+            Add("2×2 матрица: ad−bc при a=3,b=1,c=2,d=4?", "10", "12−2.", 22);
+            Add("E при стойности 2 и 4 с p=1/2?", "3", "(2+4)/2.", 22);
+            Add("∫ 0 dx без C?", "0", "Нулева функция.", 16);
+            Add("Производна на 5x? (напиши 5)", "5", "5·1.", 18);
         }
 
-        if (levelId == 3)
+        // Topic-agnostic extras to fill count
+        if (pool.Count < count + 5)
         {
-            if (t.Contains("квадратн") || t.Contains("дискриминант") || t.Contains("виет") || t.Contains("корен"))
+            for (int k = 0; k < 25; k++)
             {
-                yield return ("x² − 5x + 6 = 0, един корен е 2. Другият?", "3", "Сума=5", 20);
-                yield return ("Дискриминанта на x² − 4x + 4?", "0", "b²-4ac", 20);
-                yield break;
+                int a = 10 + (salt + k * 5) % 40;
+                int b = 2 + (salt + k * 2) % 15;
+                Add($"Пресметни: {a} − {b}", $"{a - b}", "Изваждане.", 10);
+                Add($"Пресметни: {a} + {b}", $"{a + b}", "Събиране.", 10);
             }
-            if (t.Contains("функц") || t.Contains("линейн") || t.Contains("парабол") || t.Contains("график"))
-            {
-                yield return ("y = 2x + 1 при x = 3 — колко е y?", "7", "2*3+1", 20);
-                yield return ("Ъглов коефициент на y = −3x + 2?", "-3", "Пред x", 20);
-                yield break;
-            }
-            if (t.Contains("логаритм") || t.Contains("показателн") || t.Contains("степен"))
-            {
-                yield return ("log10(100)?", "2", "10^2=100", 20);
-                yield return ("2³?", "8", "2*2*2", 15);
-                yield break;
-            }
-            if (t.Contains("тригонометр") || t.Contains("sin") || t.Contains("cos"))
-            {
-                yield return ("sin(30°) като дроб?", "1/2", "Класика", 20);
-                yield return ("cos(0°)?", "1", "cos0=1", 15);
-                yield break;
-            }
-            if (t.Contains("комбинатор") || t.Contains("пермутац") || t.Contains("вероятност"))
-            {
-                yield return ("3! = ?", "6", "3*2*1", 20);
-                yield return ("Вероятност ези при монета? (дроб)", "1/2", "Два изхода", 15);
-                yield break;
-            }
-            if (t.Contains("стереометр") || t.Contains("обем") || t.Contains("призма") || t.Contains("пирамид") || t.Contains("сфер") || t.Contains("куб") || t.Contains("цилиндр") || t.Contains("конус"))
-            {
-                yield return ("Обем на куб a=3?", "27", "a^3", 20);
-                yield return ("Повърхнина на куб a=2 (6a²)?", "24", "6*4", 20);
-                yield break;
-            }
-            yield return ("(−3)² = ?", "9", "Квадрат", 15);
-            yield return ("√49 = ?", "7", "7*7", 15);
-            yield break;
         }
 
-        // College
-        if (t.Contains("производн") || t.Contains("диференц"))
+        // Shuffle deterministically and take `count`
+        var ordered = pool
+            .Select((item, idx) => (item, key: (salt + idx * 17) % 9973))
+            .OrderBy(x => x.key)
+            .Select(x => x.item)
+            .Distinct()
+            .Take(count)
+            .ToList();
+
+        // If Distinct shrinks too much, pad from pool
+        int guard = 0;
+        while (ordered.Count < count && guard < pool.Count)
         {
-            yield return ("Производна на x²? (2x)", "2x", "n x^(n-1)", 25);
-            yield return ("Производна на 5?", "0", "Константа", 20);
-            yield break;
+            var item = pool[guard++];
+            if (!ordered.Contains(item)) ordered.Add(item);
         }
-        if (t.Contains("границ") || t.Contains("непрекъсн") || t.Contains("редица"))
-        {
-            yield return ("lim x→0 на x?", "0", "Клони към 0", 20);
-            yield return ("Сходяща редица има граница? (yes)", "yes", "Да", 15);
-            yield break;
-        }
-        if (t.Contains("интеграл") || t.Contains("приматив"))
-        {
-            yield return ("∫2x dx без C? (x^2)", "x^2", "Обратно на 2x", 25);
-            yield return ("∫0 dx без C?", "0", "Нула", 15);
-            yield break;
-        }
-        if (t.Contains("матриц") || t.Contains("детерминант") || t.Contains("гаус") || t.Contains("крамер"))
-        {
-            yield return ("det|1 0; 0 1|?", "1", "Единична", 25);
-            yield return ("det|2 0; 0 3|?", "6", "2*3", 25);
-            yield break;
-        }
-        if (t.Contains("вероятност") || t.Contains("очакван") || t.Contains("дисперси") || t.Contains("статистик") || t.Contains("средн") || t.Contains("извадк"))
-        {
-            yield return ("Средно на 2, 4, 6?", "4", "(2+4+6)/3", 20);
-            yield return ("E при 1 и 2 с p=1/2?", "1.5", "Средно", 25);
-            yield break;
-        }
-        yield return ("Производна на x?", "1", "Наклон 1", 20);
-        yield return ("det|1 1; 1 1|?", "0", "ad-bc", 20);
+
+        foreach (var item in ordered.Take(count))
+            yield return item;
     }
+
 }

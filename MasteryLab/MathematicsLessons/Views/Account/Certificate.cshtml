@@ -1,0 +1,32 @@
+@model MathematicsLessons.Infrastructure.Data.Entities.Certificate
+@{
+  ViewData["Title"] = "Certificate";
+  Layout = "/Views/Shared/_Layout.cshtml";
+  var name = ViewBag.DisplayName as string ?? "Student";
+}
+<style>
+  .cert-sheet {
+    max-width: 720px; margin: 1rem auto; padding: 2.5rem;
+    border: 2px solid var(--br-primary); border-radius: 20px;
+    background: var(--br-surface); text-align: center;
+  }
+  .cert-sheet h1 { font-size: 1.75rem; letter-spacing: -.03em; }
+  @media print {
+    .site-header, .site-footer, .admin-bar, .no-print { display: none !important; }
+    .cert-sheet { border-color: #6c5ce7; box-shadow: none; }
+  }
+</style>
+<div class="no-print mb-3 d-flex gap-2">
+  <a class="btn btn-outline-secondary btn-sm" asp-action="Profile">← Profile</a>
+  <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">Print / Save PDF</button>
+</div>
+<div class="cert-sheet">
+  <div class="pz-pill" style="color:var(--br-primary)">MasteryLab</div>
+  <h1 class="mt-2">Certificate of completion</h1>
+  <p class="text-muted mb-4">This certifies that</p>
+  <p class="h3 fw-bold mb-3">@name</p>
+  <p class="text-muted mb-1">has completed the path</p>
+  <p class="h4 fw-bold" style="color:var(--br-primary)">@(Model.Level?.Name ?? ("Level " + Model.LevelId))</p>
+  <p class="small text-muted mt-4">Issued @Model.IssuedAt.ToLocalTime().ToString("dd MMMM yyyy")</p>
+  <p class="small text-muted">Code: <strong>@Model.Code</strong></p>
+</div>

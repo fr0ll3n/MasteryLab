@@ -96,6 +96,13 @@ public class HomeController : Controller
                 ViewBag.CompletedLessons = doneCount;
                 ViewBag.UserPoints = me.Points;
                 ViewBag.UserStreak = me.StreakDays;
+                var goal = me.DailyGoalTarget > 0 ? me.DailyGoalTarget : 3;
+                var today = DateTime.UtcNow.Date;
+                var doneToday = await _ctx.LessonProgress.CountAsync(p =>
+                    p.UserId == me.Id && p.IsCompleted && p.CompletedAt != null && p.CompletedAt.Value.Date == today);
+                ViewBag.DailyGoalTarget = goal;
+                ViewBag.DailyGoalDone = doneToday;
+
             }
         }
 

@@ -381,8 +381,16 @@ public class ClassroomController : Controller
             for (int i = 0; i < exercises.Count; i++)
             {
                 var given = answers != null && i < answers.Count ? answers[i] : "";
-                if (!AnswerChecker.IsCorrect(exercises[i].Solution, given))
-                    allOk = false;
+                var ok = AnswerChecker.IsCorrect(exercises[i].Solution, given);
+                if (!ok) allOk = false;
+                _ctx.ExerciseAttempts.Add(new ExerciseAttempt
+                {
+                    UserId = me.Id,
+                    ExerciseId = exercises[i].Id,
+                    LessonId = lesson.Id,
+                    GivenAnswer = given ?? "",
+                    IsCorrect = ok
+                });
             }
         }
 
@@ -428,5 +436,30 @@ public class ClassroomController : Controller
             ? "Lesson already completed."
             : "Exercises passed. Next lesson unlocked.";
         return RedirectToAction(nameof(Lesson), new { id });
+    }
+
+    /// Weak-spot review: latest wrong answers for this user.
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> Review()
+    {
+        var me = await MeAsync();
+        if (me == null) return Challenge();
+
+        var wrong = await _ctx.ExerciseAttempts.AsNoTracking()
+            .Include(a => a.Exercise)
+            .Include(a => a.Lesson)
+            .Where(a => a.UserId == me.Id && !a.IsCorrect)
+            .OrderByDescending(a => a.CreatedAt)
+            .Take(50)
+            .ToListAsync();
+
+        // Prefer unique exercises (latest wrong per exercise)
+        var latest = wrong
+            .GroupBy(a => a.ExerciseId)
+            .Select(g => g.First())
+            .ToList();
+
+        return View(latest);
     }
 }

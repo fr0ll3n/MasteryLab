@@ -33,6 +33,7 @@
           <p class="small text-muted mb-0">Subscriber for @rank.MonthsSubscribed month(s)</p>
         }
         <hr />
+        <a class="btn btn-sm btn-outline-secondary me-1" asp-controller="Classroom" asp-action="Review">Weak spots</a>
         <a class="btn btn-sm btn-outline-secondary" asp-area="Identity" asp-page="/Account/Manage/Index">Account settings</a>
       </div>
     </div>
@@ -78,7 +79,7 @@
                 @(Model.LevelNames.GetValueOrDefault(c.LevelId, $"Level {c.LevelId}"))
                 <span class="small text-muted">· @c.IssuedAt.ToLocalTime().ToString("dd MMM yyyy")</span>
               </span>
-              <span class="badge-soft green">Earned</span>
+              <a class="btn btn-sm btn-outline-secondary" asp-action="Certificate" asp-route-id="@c.Id">View</a>
             </li>
           }
           </ul>

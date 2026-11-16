@@ -21,6 +21,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
     public DbSet<SessionAttendance> SessionAttendances { get; set; } = null!;
     public DbSet<Certificate> Certificates { get; set; } = null!;
     public DbSet<Notification> Notifications { get; set; } = null!;
+    public DbSet<ExerciseAttempt> ExerciseAttempts { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

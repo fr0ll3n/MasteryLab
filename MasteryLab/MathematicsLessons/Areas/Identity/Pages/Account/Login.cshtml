@@ -5,12 +5,15 @@
     Layout = "/Views/Shared/_Layout.cshtml";
 }
 <div class="auth-wrap">
+    <div class="text-center mb-3">
+        <div class="pz-pill" style="color:var(--br-primary)">Welcome back</div>
+        <h1 class="page-title h3">Log in</h1>
+        <p class="page-lead mx-auto">Continue where you left off.</p>
+    </div>
     <div class="card">
         <div class="card-body p-4">
-            <h1 class="h4 mb-1">Log in</h1>
-            <p class="small text-muted mb-3">Use your email and password.</p>
             <form method="post">
-                <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+                <div asp-validation-summary="All" class="text-danger small mb-2"></div>
                 <div class="mb-3">
                     <label class="form-label" asp-for="Input.Email">Email</label>
                     <input asp-for="Input.Email" class="form-control" autocomplete="username" />
@@ -21,11 +24,11 @@
                 </div>
                 <div class="form-check mb-3">
                     <input class="form-check-input" asp-for="Input.RememberMe" />
-                    <label class="form-check-label small" asp-for="Input.RememberMe"></label>
+                    <label class="form-check-label" asp-for="Input.RememberMe">Remember me</label>
                 </div>
-                <button type="submit" class="btn btn-primary w-100">Log in</button>
+                <button type="submit" class="btn btn-primary w-100">Sign in</button>
             </form>
-            <p class="small text-muted text-center mt-3 mb-0">No account? <a asp-page="./Register">Register</a></p>
+            <p class="small text-muted text-center mt-3 mb-0">New user? <a asp-page="./Register">Sign up</a></p>
         </div>
     </div>
 </div>

@@ -21,6 +21,9 @@ public class User : IdentityUser
     [Range(0, int.MaxValue)]
     public int StreakDays { get; set; }
 
+    /// Lessons to complete per day (default 3).
+    public int DailyGoalTarget { get; set; } = 3;
+
     public DateTime? LastActivityDate { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

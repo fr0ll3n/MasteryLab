@@ -19,7 +19,21 @@
     <div class="card mb-3"><div class="card-body" style="white-space:pre-line">@Model.Lesson.Content</div></div>
     @if ((Model.IsUnlocked || isStaff) && showExercises)
     {
-      <div class="card" id="exercisePanel">
+      
+@if (TempData["Solutions"] is string sols && !string.IsNullOrWhiteSpace(sols))
+{
+  <div class="alert alert-warning">
+    <div class="fw-semibold mb-2">Примерни верни решения (за сгрешените):</div>
+    <ul class="small mb-0">
+    @foreach (var line in sols.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+    {
+      <li>@line</li>
+    }
+    </ul>
+  </div>
+}
+
+<div class="card" id="exercisePanel">
         <div class="card-body">
           <h2 class="h5 mb-1">Exercises</h2>
           <p class="small text-muted">Pass to unlock the next lesson. Fail → watch the video again.</p>

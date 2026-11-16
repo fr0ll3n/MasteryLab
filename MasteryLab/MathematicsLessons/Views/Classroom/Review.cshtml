@@ -1,0 +1,28 @@
+@model List<MathematicsLessons.Infrastructure.Data.Entities.ExerciseAttempt>
+@{ ViewData["Title"] = "Review"; }
+<a class="course-back" asp-action="Index">← Courses</a>
+<h1 class="page-title">Practice weak spots</h1>
+<p class="page-lead">Questions you missed recently. Re-open the lesson and try again.</p>
+@if (Model == null || !Model.Any())
+{
+  <div class="card"><div class="card-body text-muted">No wrong answers yet — keep learning.</div></div>
+}
+else
+{
+  @foreach (var a in Model)
+  {
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="small text-muted mb-1">@a.Lesson?.Title · @a.CreatedAt.ToLocalTime().ToString("dd MMM HH:mm")</div>
+        <div class="fw-semibold mb-2">@a.Exercise?.Question</div>
+        <div class="small mb-2">Your answer: <span class="text-danger">@(string.IsNullOrWhiteSpace(a.GivenAnswer) ? "—" : a.GivenAnswer)</span></div>
+        <div class="small mb-1">Верно: <strong>@a.Exercise?.Solution</strong></div>
+        @if (!string.IsNullOrEmpty(a.Exercise?.Hint))
+        {
+          <div class="small text-muted mb-2">Подсказка: @a.Exercise.Hint</div>
+        }
+        <a class="btn btn-sm btn-primary" asp-action="Lesson" asp-route-id="@a.LessonId">Open lesson</a>
+      </div>
+    </div>
+  }
+}
