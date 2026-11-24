@@ -3,11 +3,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MathematicsLessons.Infrastructure.Data;
 
-/// <summary>
 /// Full Bulgarian school-style math catalog (grades 1–12 + university parts 1–3).
 /// Titles follow common curriculum themes; content is original short guidance text, not textbook copy.
 /// Applied via EF HasData → Update-Database.
-/// </summary>
 public static class CatalogSeed
 {
     public static readonly string[] DemoVideos =
@@ -350,7 +348,7 @@ public static class CatalogSeed
 
         void Add(string q, string sol, string hint, int pts) => pool.Add((q, sol, hint, pts));
 
-        // --- Shared arithmetic variants (deterministic from salt) ---
+        // Shared arithmetic variants (deterministic from salt)
         for (int k = 0; k < 30; k++)
         {
             int a = 2 + (salt + k * 7) % 18;

@@ -83,6 +83,27 @@ public class ApplicationDbContext : IdentityDbContext<User>
             e.HasIndex(a => new { a.UserId, a.ScheduleId }).IsUnique();
         });
 
+        builder.Entity<ExerciseAttempt>(e =>
+        {
+            e.HasOne(a => a.User)
+                .WithMany()
+                .HasForeignKey(a => a.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(a => a.Exercise)
+                .WithMany()
+                .HasForeignKey(a => a.ExerciseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // NO cascade for Lessons (otherwise SQL Server error 1785)
+            e.HasOne(a => a.Lesson)
+                .WithMany()
+                .HasForeignKey(a => a.LessonId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasIndex(a => new { a.UserId, a.CreatedAt });
+        });
+
         CatalogSeed.Apply(builder);
     }
 }

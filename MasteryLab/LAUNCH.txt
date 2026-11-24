@@ -1,0 +1,27 @@
+MasteryLab — launch (ти)
+========================
+
+1) Visual Studio → open MathematicsLessons.sln
+2) Package Manager Console, Default project = MathematicsLessons.Infrastructure
+
+   Add-Migration LaunchReady
+   Update-Database
+
+3) appsettings.json / Development:
+   - OwnerEmail = твоят email (вече е зададен ако е yo4man2007@gmail.com)
+   - ConnectionStrings:DefaultConnection
+
+4) F5 Run
+
+5) Smoke test:
+   - Register с OwnerEmail → Admin bar
+   - Courses → first free lesson → video end → exercises
+   - Home → Continue lesson
+   - Search на Courses
+   - Subscribe (mock)
+   - Teacher → Student progress
+   - Alerts / Profile
+
+6) Production: see PRODUCTION-CHECKLIST.txt
+
+Code steps included: 1–6 + AnswerChecker polish.
