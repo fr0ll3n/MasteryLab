@@ -59,6 +59,7 @@
                 {
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item"><a class="nav-link" asp-controller="Classroom" asp-action="Index">Courses</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Placement" asp-action="Index">Placement</a></li>
                         @if (isSub || User.IsInRole("Teacher") || User.IsInRole("Admin"))
                         {
                             <li class="nav-item"><a class="nav-link" asp-controller="Booking" asp-action="Index">Private lesson</a></li>

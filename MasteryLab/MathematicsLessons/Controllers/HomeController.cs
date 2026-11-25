@@ -42,6 +42,11 @@ public class HomeController : Controller
 
         ViewBag.IsLoggedIn = me != null;
         ViewBag.IsSubscribed = me?.SubId != null;
+        ViewBag.IsAdmin = User.IsInRole("Admin");
+        ViewBag.IsTeacher = User.IsInRole("Teacher");
+        ViewBag.IsStudent = User.IsInRole("Student");
+        ViewBag.DisplayName = me?.DisplayName ?? me?.Email;
+
         ViewBag.PlanName = me?.Sub?.Type;
         ViewBag.Levels = levels;
         ViewBag.TotalLessons = levels.Sum(l => l.LessonCount);

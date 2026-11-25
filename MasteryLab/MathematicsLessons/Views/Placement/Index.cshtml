@@ -1,0 +1,34 @@
+@{ ViewData["Title"] = "Placement"; }
+<div class="text-center mb-4">
+  <div class="pz-pill" style="color:var(--br-primary)">Start at the right level</div>
+  <h1 class="page-title">Quick placement</h1>
+  <p class="page-lead mx-auto">Five short questions. We suggest Beginner → College. You can still open any unlocked path.</p>
+</div>
+<div class="card auth-wrap" style="max-width:560px">
+  <div class="card-body p-4">
+    <form method="post">
+      @Html.AntiForgeryToken()
+      <div class="mb-3">
+        <label class="form-label fw-semibold">1. What is 2 + 3?</label>
+        <input type="number" name="q1" class="form-control" required />
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">2. What is 12 ÷ 3?</label>
+        <input type="number" name="q2" class="form-control" required />
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">3. What is 20% of 50?</label>
+        <input type="number" name="q3" class="form-control" required />
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">4. If x + 7 = 15, what is x?</label>
+        <input type="number" name="q4" class="form-control" required />
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">5. Derivative of x² (enter the coefficient of x, e.g. 2 for 2x)</label>
+        <input type="number" name="q5" class="form-control" required />
+      </div>
+      <button type="submit" class="btn btn-primary w-100">See recommendation</button>
+    </form>
+  </div>
+</div>

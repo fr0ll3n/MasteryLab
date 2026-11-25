@@ -246,6 +246,7 @@ public class ClassroomController : Controller
             IsUnlocked = unlocked,
             IsCompleted = prog?.IsCompleted ?? false,
             WatchedPercent = prog?.WatchedPercent ?? 0,
+            ResumeSeconds = (prog != null && !prog.VideoWatched) ? prog.LastPositionSeconds : 0,
             NextLesson = next,
             CanUpload = IsStaff(),
             VideoWatched = watched,
@@ -436,6 +437,34 @@ public class ClassroomController : Controller
             ? "Lesson already completed."
             : "Exercises passed. Next lesson unlocked.";
         return RedirectToAction(nameof(Lesson), new { id });
+    }
+
+
+    /// Periodic save of playback position (resume later).
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SaveVideoProgress(int id, double position, int percent)
+    {
+        var me = await MeAsync();
+        if (me == null) return Unauthorized();
+        var lesson = await _ctx.Lessons.FindAsync(id);
+        if (lesson == null) return NotFound();
+
+        var progress = await _ctx.LessonProgress.FirstOrDefaultAsync(p => p.UserId == me.Id && p.LessonId == id);
+        if (progress == null)
+        {
+            progress = new LessonProgress { UserId = me.Id, LessonId = id };
+            _ctx.LessonProgress.Add(progress);
+        }
+        if (!progress.VideoWatched)
+        {
+            progress.LastPositionSeconds = Math.Max(0, position);
+            progress.WatchedPercent = Math.Clamp(percent, 0, 99);
+            progress.UpdatedAt = DateTime.UtcNow;
+            await _ctx.SaveChangesAsync();
+        }
+        return Ok();
     }
 
     /// Weak-spot review: latest wrong answers for this user.

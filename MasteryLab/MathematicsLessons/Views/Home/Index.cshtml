@@ -1,6 +1,11 @@
 @{
     ViewData["Title"] = "Home";
     var loggedIn = ViewBag.IsLoggedIn as bool? ?? (User.Identity?.IsAuthenticated == true);
+    var isSub = ViewBag.IsSubscribed as bool? ?? false;
+    var isAdmin = ViewBag.IsAdmin as bool? ?? User.IsInRole("Admin");
+    var isTeacher = ViewBag.IsTeacher as bool? ?? User.IsInRole("Teacher");
+    var isStudent = ViewBag.IsStudent as bool? ?? User.IsInRole("Student");
+    var displayName = ViewBag.DisplayName as string ?? User.Identity?.Name ?? "Learner";
     var continueId = ViewBag.ContinueLessonId as int?;
     var continueTitle = ViewBag.ContinueLessonTitle as string;
     var continueLevel = ViewBag.ContinueLevelName as string;
@@ -11,57 +16,70 @@
     var goalDone = ViewBag.DailyGoalDone as int? ?? 0;
     var goalTarget = ViewBag.DailyGoalTarget as int? ?? 3;
     var levels = ViewBag.Levels as IEnumerable<MathematicsLessons.Controllers.CourseStatVm>;
+    var totalLessons = ViewBag.TotalLessons as int? ?? 0;
 }
+
 @if (!loggedIn)
 {
+    @* -------- Guest (not registered) -------- *@
     <div class="pz-hero">
         <div class="pz-hero-inner">
-            <div class="pz-pill">Learn by doing</div>
+            <div class="pz-pill">Your personal path for math</div>
             <h1>Build real math intuition</h1>
             <p>
-                Start from the basics or jump to where you are.
-                Watch a short lesson, solve exercises, and unlock what comes next.
+                Start from scratch, work through homework topics, and prepare for tests.
+                Short video lessons, practice after every step, and clear progress from grade 1 to college.
             </p>
-            <a class="btn btn-primary me-2" asp-area="Identity" asp-page="/Account/Register">Start learning</a>
-            <a class="btn btn-outline-secondary" style="background:rgba(255,255,255,.08);color:#fff;border-color:rgba(255,255,255,.25)"
+            <a class="btn btn-primary me-2" asp-area="Identity" asp-page="/Account/Register">Start learning free</a>
+            <a class="btn btn-outline-secondary"
+               style="background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.4)"
                asp-area="Identity" asp-page="/Account/Login">Log in</a>
         </div>
     </div>
 
-    <p class="section-label">How it works</p>
-    <div class="row g-3 mb-5">
+    <p class="section-label">Why MasteryLab</p>
+    <div class="row g-3 mb-4">
         <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body p-4">
-                    <div class="badge-soft mb-3">1</div>
-                    <h3 class="h6 fw-bold">Learn in sequence</h3>
-                    <p class="small text-muted mb-0">Finish a video, pass the exercises, unlock the next lesson — step by step.</p>
-                </div>
-            </div>
+            <div class="card h-100"><div class="card-body p-4">
+                <div class="badge-soft mb-3">Guided</div>
+                <h3 class="h6 fw-bold">Learn in sequence</h3>
+                <p class="small text-muted mb-0">
+                    Finish a video, pass the exercises, unlock the next lesson.
+                    No random jump — a clear path so gaps do not pile up.
+                </p>
+            </div></div>
         </div>
         <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body p-4">
-                    <div class="badge-soft mb-3">2</div>
-                    <h3 class="h6 fw-bold">From grade 1 to college</h3>
-                    <p class="small text-muted mb-0">Beginner, Intermediate, Advanced, and College paths with clear sections.</p>
-                </div>
-            </div>
+            <div class="card h-100"><div class="card-body p-4">
+                <div class="badge-soft mb-3">Practice</div>
+                <h3 class="h6 fw-bold">Exercises after every lesson</h3>
+                <p class="small text-muted mb-0">
+                    Several problems per topic — from basic arithmetic to college calculus.
+                    Miss one? See the correct solution and try again after rewatching.
+                </p>
+            </div></div>
         </div>
         <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body p-4">
-                    <div class="badge-soft mb-3">3</div>
-                    <h3 class="h6 fw-bold">Help when you need it</h3>
-                    <p class="small text-muted mb-0">Subscribers book private lessons and join public Discord Q&amp;A.</p>
-                </div>
-            </div>
+            <div class="card h-100"><div class="card-body p-4">
+                <div class="badge-soft mb-3">Support</div>
+                <h3 class="h6 fw-bold">Help when you are stuck</h3>
+                <p class="small text-muted mb-0">
+                    Free users try the first Beginner lesson.
+                    Premium unlocks the full catalog, private lessons, and Discord Q&amp;A sessions.
+                </p>
+            </div></div>
         </div>
     </div>
 
+    <p class="section-label">Paths from grade 1 to college</p>
+    <p class="page-lead">
+        Four main tracks: Beginner (1–4), Intermediate (5–7), Advanced (8–12), and College.
+        Each track has sections by grade and topic — algebra, geometry, and more — with lessons you unlock step by step.
+        @(totalLessons > 0 ? $"{totalLessons} lessons" : "Dozens of lessons") are structured so you always know what comes next.
+    </p>
+
     @if (levels != null && levels.Any())
     {
-        <p class="section-label">Paths</p>
         <div class="row g-3 mb-4">
         @foreach (var lv in levels)
         {
@@ -82,34 +100,114 @@
         <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
                 <h2 class="h5 mb-1 fw-bold">Try the first lesson free</h2>
-                <p class="small text-muted mb-0">No card required. Upgrade later for the full catalog.</p>
+                <p class="small text-muted mb-0">
+                    Create an account — no card required. Watch the intro video, solve the exercises,
+                    and see how unlocking works. Upgrade later for every course and private tutoring.
+                </p>
             </div>
             <a class="btn btn-primary" asp-area="Identity" asp-page="/Account/Register">Create account</a>
         </div>
     </div>
 }
-else
+else if (isAdmin)
 {
-    <div class="pz-hero" style="min-height:220px">
+    @* -------- Admin -------- *@
+    <div class="pz-hero" style="min-height:240px">
         <div class="pz-hero-inner py-4">
-            <div class="pz-pill">Your path</div>
-            <h1 style="font-size:1.85rem">Continue learning</h1>
+            <div class="pz-pill">Admin</div>
+            <h1 style="font-size:1.85rem">Welcome, @displayName</h1>
+            <p class="mb-3">
+                You manage MasteryLab: users, prices, session plans, bookings, and the full course catalog.
+                Teachers can edit content; only you control roles and global settings.
+            </p>
+            <a class="btn btn-primary me-2" asp-controller="Admin" asp-action="Index">Admin panel</a>
+            <a class="btn btn-outline-secondary" style="background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.4)"
+               asp-controller="CourseAdmin" asp-action="Index">Manage courses</a>
+        </div>
+    </div>
+    <p class="section-label">Quick actions</p>
+    <div class="row g-3 mb-4">
+        <div class="col-md-3"><div class="card h-100"><div class="card-body">
+            <h3 class="h6">Users &amp; teachers</h3>
+            <p class="small text-muted">Promote learners to Teacher by email.</p>
+            <a class="btn btn-sm btn-primary" asp-controller="Admin" asp-action="Users">Users</a>
+        </div></div></div>
+        <div class="col-md-3"><div class="card h-100"><div class="card-body">
+            <h3 class="h6">Prices</h3>
+            <p class="small text-muted">Free and Math Enthusiast plans.</p>
+            <a class="btn btn-sm btn-outline-secondary" asp-controller="Admin" asp-action="Plans">Plans</a>
+        </div></div></div>
+        <div class="col-md-3"><div class="card h-100"><div class="card-body">
+            <h3 class="h6">Bookings</h3>
+            <p class="small text-muted">Private lesson schedule.</p>
+            <a class="btn btn-sm btn-outline-secondary" asp-controller="Admin" asp-action="Bookings">Bookings</a>
+        </div></div></div>
+        <div class="col-md-3"><div class="card h-100"><div class="card-body">
+            <h3 class="h6">Learn as student</h3>
+            <p class="small text-muted">Open the catalog anytime.</p>
+            <a class="btn btn-sm btn-outline-secondary" asp-controller="Classroom" asp-action="Index">Courses</a>
+        </div></div></div>
+    </div>
+}
+else if (isTeacher)
+{
+    @* -------- Teacher -------- *@
+    <div class="pz-hero" style="min-height:240px">
+        <div class="pz-hero-inner py-4">
+            <div class="pz-pill">Teacher</div>
+            <h1 style="font-size:1.85rem">Teaching dashboard</h1>
+            <p class="mb-3">
+                Upload and edit lesson videos, add sections and exercises, and follow how students progress.
+                Missing videos are listed on your teacher board so content stays complete.
+            </p>
+            <a class="btn btn-primary me-2" asp-controller="Teacher" asp-action="Dashboard">Teacher board</a>
+            <a class="btn btn-outline-secondary" style="background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.4)"
+               asp-controller="CourseAdmin" asp-action="Index">Edit courses</a>
+        </div>
+    </div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><div class="card h-100"><div class="card-body p-4">
+            <h3 class="h6 fw-bold">Student progress</h3>
+            <p class="small text-muted mb-2">See completed lessons, points, and per-level detail.</p>
+            <a class="btn btn-sm btn-primary" asp-controller="Teacher" asp-action="Students">Students</a>
+        </div></div></div>
+        <div class="col-md-4"><div class="card h-100"><div class="card-body p-4">
+            <h3 class="h6 fw-bold">Content</h3>
+            <p class="small text-muted mb-2">Add lessons, upload video (large files supported), manage exercises.</p>
+            <a class="btn btn-sm btn-outline-secondary" asp-controller="CourseAdmin" asp-action="Index">Manage</a>
+        </div></div></div>
+        <div class="col-md-4"><div class="card h-100"><div class="card-body p-4">
+            <h3 class="h6 fw-bold">Your learning</h3>
+            <p class="small text-muted mb-2">Teachers can also open any course for review.</p>
+            <a class="btn btn-sm btn-outline-secondary" asp-controller="Classroom" asp-action="Index">Courses</a>
+        </div></div></div>
+    </div>
+}
+else if (isSub)
+{
+    @* -------- Premium / Math Enthusiast -------- *@
+    <div class="pz-hero" style="min-height:240px">
+        <div class="pz-hero-inner py-4">
+            <div class="pz-pill">Math Enthusiast</div>
+            <h1 style="font-size:1.85rem">Continue learning, @displayName</h1>
             @if (continueId != null && !string.IsNullOrEmpty(continueTitle))
             {
                 <p class="mb-1">@continueLevel@(!string.IsNullOrEmpty(continueTopic) ? " · " + continueTopic : "")</p>
                 <p class="mb-3 fw-semibold" style="color:#fff">@continueTitle</p>
-                <a class="btn btn-primary me-2" asp-controller="Classroom" asp-action="Lesson" asp-route-id="@continueId">Continue</a>
+                <a class="btn btn-primary me-2" asp-controller="Classroom" asp-action="Lesson" asp-route-id="@continueId">Continue lesson</a>
             }
             else
             {
-                <p class="mb-3">Open the catalog and pick a course.</p>
+                <p class="mb-3">Full catalog unlocked — pick a path or jump to any open lesson.</p>
             }
-            <a class="btn btn-outline-secondary" style="background:rgba(255,255,255,.08);color:#fff;border-color:rgba(255,255,255,.25)"
+            <a class="btn btn-outline-secondary" style="background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.4)"
                asp-controller="Classroom" asp-action="Index">All courses</a>
+            <a class="btn btn-outline-secondary ms-2" style="background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.4)"
+               asp-controller="Booking" asp-action="Index">Private lesson</a>
         </div>
     </div>
 
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-3">
         <div class="col-md-3"><div class="card"><div class="card-body">
             <div class="small text-muted">Completed</div><div class="h3 mb-0">@completed</div>
         </div></div></div>
@@ -125,10 +223,56 @@ else
             <div class="progress"><div class="progress-bar" style="width:@((goalTarget==0?0:Math.Min(100,goalDone*100/goalTarget)))%"></div></div>
         </div></div></div>
     </div>
-    <p class="small mb-3"><a asp-controller="Classroom" asp-action="Review">Review weak spots →</a></p>
-    <div class="d-flex flex-wrap gap-2">
-        <a class="btn btn-primary" asp-controller="Classroom" asp-action="Index">Courses</a>
-        <a class="btn btn-outline-secondary" asp-controller="Subscription" asp-action="Plans">Subscription</a>
-        <a class="btn btn-outline-secondary" asp-controller="Account" asp-action="Profile">Profile</a>
+    <p class="small text-muted mb-4">
+        Premium includes every course, private 1:1 sessions, progress tracking, certificates when a level is 100%,
+        and review of problems you missed. Keep your streak by finishing today's goal.
+        <a asp-controller="Classroom" asp-action="Review">Review weak spots</a>
+    </p>
+}
+else
+{
+    @* -------- Free registered student -------- *@
+    <div class="pz-hero" style="min-height:240px">
+        <div class="pz-hero-inner py-4">
+            <div class="pz-pill">Free plan</div>
+            <h1 style="font-size:1.85rem">Welcome, @displayName</h1>
+            <p class="mb-3">
+                Your free account unlocks the <strong>first Beginner lesson</strong>.
+                Watch the video to the end, pass the exercises, and see how MasteryLab works.
+                Upgrade to Math Enthusiast for every path, private lessons, and unlimited progress.
+            </p>
+            @if (continueId != null)
+            {
+                <a class="btn btn-primary me-2" asp-controller="Classroom" asp-action="Lesson" asp-route-id="@continueId">Open free lesson</a>
+            }
+            else
+            {
+                <a class="btn btn-primary me-2" asp-controller="Classroom" asp-action="Index">Go to courses</a>
+            }
+            <a class="btn btn-outline-secondary" style="background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.4)"
+               asp-controller="Subscription" asp-action="Plans">See Premium</a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><div class="card h-100"><div class="card-body p-4">
+            <h3 class="h6 fw-bold">What you have now</h3>
+            <p class="small text-muted mb-0">
+                First Beginner video + exercises, account profile, points and streak when you complete lessons.
+                Other courses stay locked until you subscribe.
+            </p>
+        </div></div></div>
+        <div class="col-md-4"><div class="card h-100"><div class="card-body p-4">
+            <h3 class="h6 fw-bold">What Premium adds</h3>
+            <p class="small text-muted mb-0">
+                Intermediate, Advanced, College, all sections, private tutoring slots, Discord public sessions,
+                certificates, and full weak-spot review.
+            </p>
+        </div></div></div>
+        <div class="col-md-4"><div class="card h-100"><div class="card-body p-4">
+            <h3 class="h6 fw-bold">Your stats</h3>
+            <p class="small text-muted mb-1">Completed: <strong>@completed</strong> · Points: <strong>@points</strong></p>
+            <p class="small text-muted mb-0">Streak: <strong>@streak</strong> days · Goal today: @goalDone / @goalTarget</p>
+        </div></div></div>
     </div>
 }

@@ -1,6 +1,11 @@
 @model MathematicsLessons.Models.TeacherStudentProgressPage
 @{ ViewData["Title"] = Model.Student.DisplayName; var s = Model.Student; }
 <a class="course-back" asp-action="Students">← Students</a>
+<form asp-action="AssignStudent" method="post" class="mb-2 d-inline">
+  @Html.AntiForgeryToken()
+  <input type="hidden" name="studentId" value="@Model.Student.UserId" />
+  <button type="submit" class="btn btn-sm btn-outline-secondary">Assign to me</button>
+</form>
 <h1 class="page-title">@s.DisplayName</h1>
 <p class="page-lead">@s.Email · @s.Plan · @s.Points pts · streak @s.StreakDays · @s.CompletedLessons/@s.TotalLessons lessons</p>
 

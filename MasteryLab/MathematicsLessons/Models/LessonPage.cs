@@ -8,6 +8,7 @@ public class LessonPage
     public bool IsUnlocked { get; set; }
     public bool IsCompleted { get; set; }
     public int WatchedPercent { get; set; }
+    public double ResumeSeconds { get; set; }
     public Lesson? NextLesson { get; set; }
     public bool CanUpload { get; set; }
     public bool VideoWatched { get; set; }

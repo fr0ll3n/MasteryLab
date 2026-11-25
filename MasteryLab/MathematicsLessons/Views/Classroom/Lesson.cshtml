@@ -106,7 +106,36 @@
 </div>
 @section Scripts {
 <script>
-(function(){var v=document.getElementById('lessonVideo'),f=document.getElementById('watchedForm');
-if(v&&f)v.addEventListener('ended',function(){f.submit();});})();
+(function(){
+  var v=document.getElementById('lessonVideo'), f=document.getElementById('watchedForm');
+  if(!v||!f) return;
+  var start = @Model.ResumeSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
+  if(start > 5){
+    v.addEventListener('loadedmetadata', function(){
+      try { v.currentTime = Math.min(start, Math.max(0, (v.duration||start) - 2)); } catch(e) {}
+    });
+  }
+  v.addEventListener('ended', function(){ f.submit(); });
+  var token = f.querySelector('input[name="__RequestVerificationToken"]');
+  var lastSent = 0;
+  v.addEventListener('timeupdate', function(){
+    if(!v.duration || v.duration < 1 || @((Model.VideoWatched).ToString().ToLowerInvariant())) return;
+    var now = Date.now();
+    if(now - lastSent < 8000) return;
+    lastSent = now;
+    var pct = Math.floor((v.currentTime / v.duration) * 100);
+    var body = new URLSearchParams();
+    body.append('id', '@Model.Lesson.Id');
+    body.append('position', String(v.currentTime));
+    body.append('percent', String(Math.min(99, pct)));
+    if(token) body.append('__RequestVerificationToken', token.value);
+    fetch('@Url.Action("SaveVideoProgress")', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+      credentials: 'same-origin'
+    });
+  });
+})();
 </script>
 }

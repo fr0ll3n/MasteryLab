@@ -22,6 +22,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
     public DbSet<Certificate> Certificates { get; set; } = null!;
     public DbSet<Notification> Notifications { get; set; } = null!;
     public DbSet<ExerciseAttempt> ExerciseAttempts { get; set; } = null!;
+    public DbSet<TeacherStudent> TeacherStudents { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -83,25 +84,22 @@ public class ApplicationDbContext : IdentityDbContext<User>
             e.HasIndex(a => new { a.UserId, a.ScheduleId }).IsUnique();
         });
 
+
         builder.Entity<ExerciseAttempt>(e =>
         {
-            e.HasOne(a => a.User)
-                .WithMany()
-                .HasForeignKey(a => a.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            e.HasOne(a => a.Exercise)
-                .WithMany()
-                .HasForeignKey(a => a.ExerciseId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // NO cascade for Lessons (otherwise SQL Server error 1785)
-            e.HasOne(a => a.Lesson)
-                .WithMany()
-                .HasForeignKey(a => a.LessonId)
-                .OnDelete(DeleteBehavior.Restrict);
-
+            e.HasOne(a => a.User).WithMany().HasForeignKey(a => a.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(a => a.Exercise).WithMany().HasForeignKey(a => a.ExerciseId).OnDelete(DeleteBehavior.Cascade);
+            // Restrict Lesson to avoid SQL Server multiple cascade paths
+            e.HasOne(a => a.Lesson).WithMany().HasForeignKey(a => a.LessonId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(a => new { a.UserId, a.CreatedAt });
+        });
+
+
+        builder.Entity<TeacherStudent>(e =>
+        {
+            e.HasIndex(x => new { x.TeacherId, x.StudentId }).IsUnique();
+            e.HasOne<User>().WithMany().HasForeignKey(x => x.TeacherId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<User>().WithMany().HasForeignKey(x => x.StudentId).OnDelete(DeleteBehavior.Cascade);
         });
 
         CatalogSeed.Apply(builder);

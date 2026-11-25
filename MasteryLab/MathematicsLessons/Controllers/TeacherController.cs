@@ -166,4 +166,35 @@ public class TeacherController : Controller
 
         return View(page);
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AssignStudent(string studentId)
+    {
+        var me = await _users.GetUserAsync(User);
+        if (me == null || string.IsNullOrEmpty(studentId)) return RedirectToAction(nameof(Students));
+        var exists = await _ctx.TeacherStudents.AnyAsync(t => t.TeacherId == me.Id && t.StudentId == studentId);
+        if (!exists)
+        {
+            _ctx.TeacherStudents.Add(new TeacherStudent { TeacherId = me.Id, StudentId = studentId });
+            await _ctx.SaveChangesAsync();
+            TempData["Success"] = "Student assigned to you.";
+        }
+        return RedirectToAction(nameof(Student), new { id = studentId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UnassignStudent(string studentId)
+    {
+        var me = await _users.GetUserAsync(User);
+        if (me == null) return RedirectToAction(nameof(Students));
+        var row = await _ctx.TeacherStudents.FirstOrDefaultAsync(t => t.TeacherId == me.Id && t.StudentId == studentId);
+        if (row != null)
+        {
+            _ctx.TeacherStudents.Remove(row);
+            await _ctx.SaveChangesAsync();
+        }
+        return RedirectToAction(nameof(Students));
+    }
 }

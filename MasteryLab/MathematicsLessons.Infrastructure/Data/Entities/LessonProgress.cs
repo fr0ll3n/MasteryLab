@@ -20,6 +20,9 @@ public class LessonProgress
     [Range(0, 100)]
     public int WatchedPercent { get; set; }
 
+    /// Last video position for resume (seconds).
+    public double LastPositionSeconds { get; set; }
+
     public bool VideoWatched { get; set; }
     public bool ExercisesPassed { get; set; }
     public bool IsCompleted { get; set; }
