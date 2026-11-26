@@ -32,6 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MathematicsLessons.Core\MathematicsLessons.Core.csproj" />
     <ProjectReference Include="..\MathematicsLessons.Infrastructure\MathematicsLessons.Infrastructure.csproj" />
   </ItemGroup>
 
