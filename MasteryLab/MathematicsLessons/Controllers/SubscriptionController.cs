@@ -8,8 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MathematicsLessons.Controllers;
 
-/// Guest → subscribe Monthly or Annual (simulated pay).
-[Authorize]
+/// Free is automatic (SubId null). Monthly / Annual via PayPal-style demo checkout.
 public class SubscriptionController : Controller
 {
     private readonly ISubscriptionService _subs;
@@ -21,6 +20,7 @@ public class SubscriptionController : Controller
         _subs = subs; _users = users; _ctx = ctx;
     }
 
+    [AllowAnonymous]
     [HttpGet]
     public async Task<IActionResult> Plans()
     {
@@ -49,13 +49,17 @@ public class SubscriptionController : Controller
 
     [Authorize]
     [HttpGet]
-    public async Task<IActionResult> Checkout()
+    public async Task<IActionResult> Checkout(int? planId)
     {
-        var planId = HttpContext.Session.GetInt32("PendingPlanId");
-        var cycle = HttpContext.Session.GetString("PendingCycle") ?? "Monthly";
-        if (planId == null) return RedirectToAction(nameof(Plans));
-        var plan = await _subs.GetPlanAsync(planId.Value);
+        var id = planId ?? HttpContext.Session.GetInt32("PendingPlanId");
+        if (id == null) return RedirectToAction(nameof(Plans));
+        var plan = await _subs.GetPlanAsync(id.Value);
         if (plan == null) return RedirectToAction(nameof(Plans));
+
+        HttpContext.Session.SetInt32("PendingPlanId", id.Value);
+        var cycle = plan.Type.Contains("Annual", StringComparison.OrdinalIgnoreCase) ? "Annual" : "Monthly";
+        HttpContext.Session.SetString("PendingCycle", cycle);
+
         ViewBag.Cycle = cycle;
         ViewBag.Amount = cycle == "Annual"
             ? (plan.PricePerYear > 0 ? plan.PricePerYear : plan.PricePerMonth * 10)

@@ -1,32 +1,39 @@
+@model MathematicsLessons.Infrastructure.Data.Entities.Sub
 @{
   ViewData["Title"] = "Checkout";
-  var plan = ViewBag.Plan as MathematicsLessons.Infrastructure.Data.Entities.Sub;
+  var isAnnual = Model.PricePerYear > 0 && Model.Type.Contains("Annual", StringComparison.OrdinalIgnoreCase)
+                 || (Model.PricePerYear > 0 && Model.PricePerMonth < Model.PricePerYear / 10);
+  var amount = Model.PricePerYear > 0 && Model.Type.Contains("Annual", StringComparison.OrdinalIgnoreCase)
+    ? Model.PricePerYear : (Model.PricePerYear > 0 && Model.Type.Contains("Annual") ? Model.PricePerYear : Model.PricePerMonth);
+  // Prefer annual price when plan is Annual
+  if (Model.Type.Contains("Annual", StringComparison.OrdinalIgnoreCase) && Model.PricePerYear > 0)
+    amount = Model.PricePerYear;
+  else
+    amount = Model.PricePerMonth;
 }
-<div class="auth-wrap">
-  <div class="card">
-    <div class="card-body p-4">
-      <h1 class="page-title h4">Checkout</h1>
-      @if (plan == null)
-      { <p class="text-muted">Plan not found.</p> }
-      else
-      {
-        <p class="text-muted">@plan.Type</p>
-        <p class="h4">@plan.PricePerMonth.ToString("0.00") BGN / month</p>
-        <p class="small text-muted">or @plan.PricePerYear.ToString("0.00") BGN / year</p>
-        <form method="post" asp-action="Confirm">
-          @Html.AntiForgeryToken()
-          <input type="hidden" name="planId" value="@plan.Id" />
-          <div class="mb-3">
-            <label class="form-label">Billing</label>
-            <select name="annual" class="form-select">
-              <option value="false">Monthly — @plan.PricePerMonth.ToString("0.00") BGN</option>
-              <option value="true">Annual — @plan.PricePerYear.ToString("0.00") BGN</option>
-            </select>
-          </div>
-          <button type="submit" class="btn btn-primary w-100">Confirm subscription</button>
-        </form>
-      }
-      <a class="btn btn-link btn-sm mt-2" asp-action="Plans">Back to plans</a>
-    </div>
+<div class="auth-wrap" style="max-width:480px">
+  <div class="text-center mb-3">
+    <div class="pz-pill" style="color:var(--br-primary)">Secure checkout</div>
+    <h1 class="page-title" style="font-size:1.6rem">Pay with PayPal</h1>
+    <p class="page-lead mx-auto">Demo payment for MasteryLab — no real charge. Confirm to unlock all courses.</p>
   </div>
+  <div class="card"><div class="card-body p-4">
+    <div class="d-flex justify-content-between mb-2">
+      <span class="fw-semibold">@Model.Type plan</span>
+      <span class="fw-bold">@amount.ToString("0.00") BGN</span>
+    </div>
+    <p class="small text-muted">@Model.Description</p>
+    <hr />
+    <div class="rounded p-3 mb-3" style="background:#ffc439;color:#111;font-weight:700;text-align:center">
+      PayPal · Sandbox demo
+    </div>
+    <form asp-action="Pay" method="post">
+      @Html.AntiForgeryToken()
+      <input type="hidden" name="planId" value="@Model.Id" />
+      <input type="hidden" name="billingCycle" value="@(Model.Type.Contains("Annual", StringComparison.OrdinalIgnoreCase) ? "Annual" : "Monthly")" />
+      <button type="submit" class="btn btn-primary w-100 mb-2">Approve payment &amp; unlock</button>
+      <a class="btn btn-outline-secondary w-100" asp-action="Plans">Cancel</a>
+    </form>
+    <p class="small text-muted mt-3 mb-0">After approval you can open every lesson without sequential unlocks. Private booking stays available on paid plans.</p>
+  </div></div>
 </div>

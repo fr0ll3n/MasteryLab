@@ -13,3 +13,10 @@ public class BookingPage
     /// <summary>Next upcoming private session for the live panel.</summary>
     public Appointment? Upcoming { get; set; }
 }
+
+
+public class TeacherOption
+{
+    public string Id { get; set; } = "";
+    public string Name { get; set; } = "";
+}

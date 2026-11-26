@@ -13,6 +13,10 @@ public class Appointment
     public string UserId { get; set; } = "";
     public User User { get; set; } = null!;
 
+    /// Assigned teacher (Identity user in Teacher/Admin role).
+    [Required, MaxLength(450)]
+    public string TeacherId { get; set; } = "";
+
     [Required]
     public DateTime Date { get; set; }
 

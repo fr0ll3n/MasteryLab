@@ -35,6 +35,18 @@ public class ClassroomController : Controller
         _notify = notify; _subs = subs; _points = points;
     }
 
+    
+    /// Lessons the free user has already started (counts toward the 3-video free quota).
+    private async Task<HashSet<int>> GetStartedLessonIdsAsync(string userId)
+    {
+        return (await _ctx.LessonProgress.AsNoTracking()
+            .Where(p => p.UserId == userId && (p.VideoWatched || p.WatchedPercent >= 5 || p.LastPositionSeconds > 3))
+            .Select(p => p.LessonId)
+            .ToListAsync()).ToHashSet();
+    }
+
+    private bool IsStaffUser() => User.IsInRole("Admin") || User.IsInRole("Teacher");
+
     private async Task<User?> MeAsync()
     {
         var me = await _users.GetUserAsync(User);
@@ -48,7 +60,7 @@ public class ClassroomController : Controller
     public async Task<IActionResult> Index(string? q)
     {
         var me = await MeAsync();
-        /* Free users can browse; only first Beginner lesson is unlocked */
+        /* Free: 3 videos max. Paid: full open catalog */
 
         var levels = await _ctx.Levels.OrderBy(l => l.SortOrder).ToListAsync();
         var topics = await _ctx.Topics.OrderBy(t => t.SortOrder).ToListAsync();
@@ -60,12 +72,8 @@ public class ClassroomController : Controller
 
         var isSub = me != null && _subs.IsSubscribed(me);
         var isStaff = IsStaff();
-        var freeFirstLessonId = 0;
-        if (!isSub && !isStaff)
-        {
-            var begId = levels.OrderBy(l => l.SortOrder).Select(l => l.Id).FirstOrDefault();
-            freeFirstLessonId = lessons.Where(l => l.LevelId == begId).OrderBy(l => l.SortOrder).Select(l => l.Id).FirstOrDefault();
-        }
+        // Free: up to 3 started videos. Subscriber/Staff: all open (no sequential gates).
+        var started = me == null ? new HashSet<int>() : await GetStartedLessonIdsAsync(me.Id);
 
         var page = new ClassroomPage
         {
@@ -80,9 +88,7 @@ public class ClassroomController : Controller
             var block = new LevelBlock
             {
                 Level = level,
-                IsUnlocked = isStaff || isSub
-                    ? _access.IsLevelUnlocked(level, levels, lessons, completed)
-                    : levels.OrderBy(l => l.SortOrder).Select(x => x.Id).FirstOrDefault() == level.Id,
+                IsUnlocked = true, // levels always browsable; free quota enforced per lesson
                 Completed = levelLessons.Count(l => completed.Contains(l.Id)),
                 Total = levelLessons.Count,
                 HasCertificate = certs.Contains(level.Id)
@@ -92,11 +98,7 @@ public class ClassroomController : Controller
                 var tb = new TopicBlock { Topic = topic };
                 foreach (var lesson in levelLessons.Where(l => l.TopicId == topic.Id).OrderBy(l => l.SortOrder))
                 {
-                    bool lessonUnlocked;
-                    if (isStaff || isSub)
-                        lessonUnlocked = _access.IsLessonUnlocked(lesson, levels, lessons, completed);
-                    else
-                        lessonUnlocked = freeFirstLessonId != 0 && lesson.Id == freeFirstLessonId;
+                    bool lessonUnlocked = isStaff || _access.CanOpenLesson(isSub, lesson.Id, started);
                     tb.Lessons.Add(new LessonRow
                     {
                         Lesson = lesson,
@@ -156,16 +158,8 @@ public class ClassroomController : Controller
         var isSub = me != null && _subs.IsSubscribed(me);
         var isStaff = IsStaff();
 
-        var freeFirstId = 0;
-        if (!isSub && !isStaff)
-        {
-            var begId = levels.OrderBy(l => l.SortOrder).Select(l => l.Id).FirstOrDefault();
-            freeFirstId = lessons.Where(l => l.LevelId == begId).OrderBy(l => l.SortOrder).Select(l => l.Id).FirstOrDefault();
-        }
-
-        var levelUnlocked = isStaff || isSub
-            ? _access.IsLevelUnlocked(level, levels, lessons, completed)
-            : levels.OrderBy(l => l.SortOrder).Select(x => x.Id).FirstOrDefault() == level.Id;
+        var started = me == null ? new HashSet<int>() : await GetStartedLessonIdsAsync(me.Id);
+        var levelUnlocked = true;
 
         var levelLessons = lessons.Where(l => l.LevelId == id).ToList();
         var block = new LevelBlock
@@ -181,11 +175,7 @@ public class ClassroomController : Controller
             var tb = new TopicBlock { Topic = topic };
             foreach (var lesson in levelLessons.Where(l => l.TopicId == topic.Id).OrderBy(l => l.SortOrder))
             {
-                bool unlocked;
-                if (isStaff || isSub)
-                    unlocked = _access.IsLessonUnlocked(lesson, levels, lessons, completed);
-                else
-                    unlocked = freeFirstId != 0 && lesson.Id == freeFirstId;
+                var unlocked = isStaff || _access.CanOpenLesson(isSub, lesson.Id, started);
                 tb.Lessons.Add(new LessonRow
                 {
                     Lesson = lesson,
@@ -212,22 +202,15 @@ public class ClassroomController : Controller
         var lessons = await _ctx.Lessons.OrderBy(l => l.SortOrder).ToListAsync();
         var completed = me == null ? new HashSet<int>() : await _progress.GetCompletedLessonIdsAsync(me.Id);
 
-        // Free users: only first Beginner lesson. Math Enthusiast/Staff: normal path.
-        bool unlocked;
-        if (IsStaff() || (me != null && _subs.IsSubscribed(me)))
+        // Subscriber/Staff: full access. Free: only 3 videos (any courses), then lock.
+        var isSubUser = me != null && _subs.IsSubscribed(me);
+        var startedLessons = me == null ? new HashSet<int>() : await GetStartedLessonIdsAsync(me.Id);
+        bool unlocked = IsStaff() || _access.CanOpenLesson(isSubUser, lesson.Id, startedLessons);
+        if (!unlocked)
         {
-            unlocked = _access.IsLessonUnlocked(lesson, levels, lessons, completed) || IsStaff();
-        }
-        else
-        {
-            var beginnerId = levels.OrderBy(l => l.SortOrder).Select(l => l.Id).FirstOrDefault();
-            var firstId = lessons.Where(l => l.LevelId == beginnerId).OrderBy(l => l.SortOrder).Select(l => l.Id).FirstOrDefault();
-            unlocked = lesson.Id == firstId;
-            if (!unlocked && me != null)
-            {
-                TempData["Error"] = "Free планът включва само първия Beginner урок. Стани Math Enthusiast за всички курсове.";
-                return RedirectToAction("Plans", "Subscription");
-            }
+            if (me == null) return Challenge();
+            TempData["Error"] = "Free plan includes 3 video lessons. Subscribe Monthly or Annual (PayPal checkout) for full access.";
+            return RedirectToAction("Plans", "Subscription");
         }
 
         LessonProgress? prog = null;
@@ -270,15 +253,8 @@ public class ClassroomController : Controller
         var lessons = await _ctx.Lessons.OrderBy(l => l.SortOrder).ToListAsync();
         var completed = await _progress.GetCompletedLessonIdsAsync(me.Id);
 
-        bool canProgress;
-        if (IsStaff() || _subs.IsSubscribed(me))
-            canProgress = _access.IsLessonUnlocked(lesson, levels, lessons, completed) || IsStaff();
-        else
-        {
-            var begId = levels.OrderBy(l => l.SortOrder).Select(l => l.Id).FirstOrDefault();
-            var firstId = lessons.Where(l => l.LevelId == begId).OrderBy(l => l.SortOrder).Select(l => l.Id).FirstOrDefault();
-            canProgress = lesson.Id == firstId;
-        }
+        var startedP = await GetStartedLessonIdsAsync(me.Id);
+        var canProgress = IsStaff() || _access.CanOpenLesson(_subs.IsSubscribed(me), id, startedP);
         if (!canProgress) return Forbid();
 
         var wasDone = completed.Contains(id);

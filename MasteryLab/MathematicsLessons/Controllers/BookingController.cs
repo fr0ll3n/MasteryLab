@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MathematicsLessons.Controllers;
 
+/// Private 1:1 sessions — Monthly/Annual subscribers only (hidden from Free).
 [Authorize]
 public class BookingController : Controller
 {
@@ -29,16 +30,20 @@ public class BookingController : Controller
         return await _ctx.Users.Include(u => u.Sub).FirstAsync(u => u.Id == me.Id);
     }
 
+    private async Task<IActionResult?> EnsureSubscriberAsync(User me)
+    {
+        if (_subs.CanBookPrivateSessions(me)) return null;
+        TempData["Error"] = "Private lessons are only for Monthly / Annual subscribers. Free accounts cannot book.";
+        return RedirectToAction("Plans", "Subscription");
+    }
+
     [HttpGet]
     public async Task<IActionResult> Index()
     {
         var me = await MeAsync();
         if (me == null) return Challenge();
-        if (!_subs.CanBookPrivateSessions(me))
-        {
-            TempData["Error"] = "Частните уроци са за Math Enthusiast. Виж абонамента.";
-            return RedirectToAction("Plans", "Subscription");
-        }
+        var gate = await EnsureSubscriberAsync(me);
+        if (gate != null) return gate;
 
         var used = await _booking.SessionsUsedThisMonthAsync(me.Id);
         var mine = await _ctx.Appointments.Include(a => a.AppointmentPlan).Include(a => a.Receipt)
@@ -60,26 +65,25 @@ public class BookingController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Book(int? planId, string? date)
+    public async Task<IActionResult> Book(int? planId, string? date, string? teacherId)
     {
         var me = await MeAsync();
         if (me == null) return Challenge();
-        if (!_subs.CanBookPrivateSessions(me))
-        {
-            TempData["Error"] = "Частните уроци са за Math Enthusiast.";
-            return RedirectToAction("Plans", "Subscription");
-        }
+        var gate = await EnsureSubscriberAsync(me);
+        if (gate != null) return gate;
 
         var plans = await _booking.GetDurationPlansAsync();
+        var teachers = (await _booking.GetTeachersAsync())
+            .Select(x => new TeacherOption { Id = x.Id, Name = x.Name }).ToList();
         ViewBag.Plans = plans;
+        ViewBag.Teachers = teachers;
         ViewBag.SelectedPlanId = planId;
-        ViewBag.MinDate = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd");
+        ViewBag.SelectedTeacherId = teacherId;
+        ViewBag.MinDate = DateTime.Today.AddDays(0).ToString("yyyy-MM-dd");
         ViewBag.MaxDate = DateTime.Today.AddDays(60).ToString("yyyy-MM-dd");
-        ViewBag.TimeZoneNote = "Часовете са в българско време (EET / EEST — автоматично лятно часово време).";
+        ViewBag.TimeZoneNote = "Hours are local (EET/EEST). Sessions only 08:00–23:00. Each booking blocks the teacher for 2 hours from the start time.";
 
-        AppointmentPlan? selected = null;
-        if (planId != null)
-            selected = plans.FirstOrDefault(p => p.Id == planId);
+        AppointmentPlan? selected = planId != null ? plans.FirstOrDefault(p => p.Id == planId) : null;
         ViewBag.SelectedPlan = selected;
 
         DateTime? selectedDate = null;
@@ -87,62 +91,51 @@ public class BookingController : Controller
             selectedDate = d.Date;
         ViewBag.SelectedDate = selectedDate?.ToString("yyyy-MM-dd");
 
-        if (selectedDate != null)
-        {
-            var count = await _booking.CountSessionsOnDayAsync(selectedDate.Value);
-            ViewBag.DaySessionCount = count;
-            ViewBag.DayFull = count >= 4;
-            ViewBag.Hours = selected != null
-                ? await _booking.GetAvailableHoursAsync(selectedDate.Value, selected.DurationMinutes)
-                : new List<string>();
-        }
-        else
-        {
-            ViewBag.DaySessionCount = 0;
-            ViewBag.DayFull = false;
-            ViewBag.Hours = new List<string>();
-        }
+        var hours = new List<int>();
+        if (selected != null && selectedDate != null && !string.IsNullOrEmpty(teacherId))
+            hours = await _booking.GetAvailableHoursAsync(teacherId, selectedDate.Value, selected.DurationMinutes);
+        ViewBag.Hours = hours.Select(h => h.ToString("00") + ":00").ToList();
+        ViewBag.HourValues = hours;
 
         return View();
     }
 
-    /// JSON: how many bookings on a day (for calendar UI).
+    /// JSON hours for AJAX calendar.
     [HttpGet]
-    public async Task<IActionResult> DayStatus(string date)
+    public async Task<IActionResult> AvailableHours(string teacherId, string date, int planId)
     {
+        var me = await MeAsync();
+        if (me == null || !_subs.CanBookPrivateSessions(me))
+            return Json(new { ok = false, hours = Array.Empty<int>() });
         if (!DateTime.TryParse(date, out var d))
-            return Json(new { ok = false });
-        var count = await _booking.CountSessionsOnDayAsync(d.Date);
-        return Json(new { ok = true, count, full = count >= 4, max = 4 });
+            return Json(new { ok = false, hours = Array.Empty<int>() });
+        var plan = (await _booking.GetDurationPlansAsync()).FirstOrDefault(p => p.Id == planId);
+        if (plan == null || string.IsNullOrEmpty(teacherId))
+            return Json(new { ok = false, hours = Array.Empty<int>() });
+        var hours = await _booking.GetAvailableHoursAsync(teacherId, d.Date, plan.DurationMinutes);
+        return Json(new { ok = true, hours });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Book(DateTime date, string hour, int planId, string? notes)
+    public async Task<IActionResult> Book(DateTime date, string hour, int planId, string teacherId, string? notes)
     {
         var me = await MeAsync();
         if (me == null) return Challenge();
-        if (!_subs.CanBookPrivateSessions(me))
-            return RedirectToAction("Plans", "Subscription");
+        var gate = await EnsureSubscriberAsync(me);
+        if (gate != null) return gate;
 
-        if (!TimeSpan.TryParse(hour, out var time))
+        if (!TimeSpan.TryParse(hour.Length <= 2 ? hour + ":00" : hour, out var time))
         {
-            TempData["Error"] = "Избери дата, час и продължителност.";
-            return RedirectToAction(nameof(Book), new { planId, date = date.ToString("yyyy-MM-dd") });
-        }
-
-        var dayCount = await _booking.CountSessionsOnDayAsync(date.Date);
-        if (dayCount >= 4)
-        {
-            TempData["Error"] = "Този ден е зает (вече има 4 или повече сесии). Избери друг ден.";
-            return RedirectToAction(nameof(Book), new { planId });
+            TempData["Error"] = "Invalid hour.";
+            return RedirectToAction(nameof(Book), new { planId, date = date.ToString("yyyy-MM-dd"), teacherId });
         }
 
         var start = date.Date.Add(time);
         var plan = (await _booking.GetDurationPlansAsync()).FirstOrDefault(p => p.Id == planId);
         if (plan == null)
         {
-            TempData["Error"] = "Невалидна продължителност.";
+            TempData["Error"] = "Invalid duration.";
             return RedirectToAction(nameof(Book));
         }
 
@@ -150,6 +143,7 @@ public class BookingController : Controller
         {
             Date = start,
             PlanId = plan.Id,
+            TeacherId = teacherId,
             Notes = notes,
             Price = plan.Price,
             PlanName = plan.Name,
@@ -181,7 +175,8 @@ public class BookingController : Controller
         if (string.IsNullOrEmpty(json)) return RedirectToAction(nameof(Book));
         var pending = System.Text.Json.JsonSerializer.Deserialize<PendingBookDto>(json)!;
 
-        var (ok, msg, appt) = await _booking.CompletePaidBookingAsync(me, pending.Date, pending.PlanId, pending.Notes);
+        var (ok, msg, appt) = await _booking.CompletePaidBookingAsync(
+            me, pending.Date, pending.PlanId, pending.TeacherId, pending.Notes);
         HttpContext.Session.Remove("PendingBook");
         TempData[ok ? "Success" : "Error"] = msg;
         if (ok && appt != null)
@@ -200,68 +195,17 @@ public class BookingController : Controller
         var appt = await _ctx.Appointments.Include(a => a.AppointmentPlan).Include(a => a.Receipt)
             .FirstOrDefaultAsync(a => a.Id == id && a.UserId == me.Id);
         if (appt == null) return NotFound();
-
-        var now = DateTime.Now;
-        await _booking.MarkMissedIfLateAsync(appt, now);
-        ViewBag.CanJoin = appt.Status is "Booked" or "InProgress"
-                          && now >= appt.Date.AddMinutes(-2) && now <= appt.Date.AddMinutes(5);
-        ViewBag.TooLate = appt.Status == "Missed" || now > appt.Date.AddMinutes(5);
-        ViewBag.NotYet = now < appt.Date.AddMinutes(-2) && appt.Status == "Booked";
         return View(appt);
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Join(int id)
+    public class PendingBookDto
     {
-        var me = await MeAsync();
-        if (me == null) return Challenge();
-        var appt = await _ctx.Appointments.FirstOrDefaultAsync(a => a.Id == id && a.UserId == me.Id);
-        if (appt == null) return NotFound();
-        var (ok, msg) = await _booking.TryJoinAsync(appt, DateTime.Now);
-        if (!ok) { TempData["Error"] = msg; return RedirectToAction(nameof(Session), new { id }); }
-        return Redirect(appt.MeetingLink ?? "/Booking");
+        public DateTime Date { get; set; }
+        public int PlanId { get; set; }
+        public string TeacherId { get; set; } = "";
+        public string? Notes { get; set; }
+        public decimal Price { get; set; }
+        public string PlanName { get; set; } = "";
+        public int DurationMinutes { get; set; }
     }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Cancel(int id)
-    {
-        var me = await MeAsync();
-        if (me == null) return Challenge();
-        var appt = await _ctx.Appointments.FirstOrDefaultAsync(a => a.Id == id && a.UserId == me.Id);
-        if (appt != null && appt.Date > DateTime.Now.AddHours(4) && appt.Status == "Booked")
-        {
-            appt.Status = "Cancelled";
-            await _ctx.SaveChangesAsync();
-            TempData["Success"] = "Cancelled.";
-        }
-        else TempData["Error"] = "Cannot cancel less than 4 hours before.";
-        return RedirectToAction(nameof(Index));
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Rate(int id, int rating, string? feedback)
-    {
-        var me = await MeAsync();
-        if (me == null) return Challenge();
-        var appt = await _ctx.Appointments.FirstOrDefaultAsync(a => a.Id == id && a.UserId == me.Id);
-        if (appt == null) return RedirectToAction(nameof(Index));
-        appt.Rating = Math.Clamp(rating, 1, 5);
-        appt.Feedback = feedback;
-        appt.Status = "Completed";
-        await _ctx.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
-    }
-}
-
-public class PendingBookDto
-{
-    public DateTime Date { get; set; }
-    public int PlanId { get; set; }
-    public string? Notes { get; set; }
-    public decimal Price { get; set; }
-    public string PlanName { get; set; } = "";
-    public int DurationMinutes { get; set; }
 }

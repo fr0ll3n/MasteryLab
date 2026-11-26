@@ -1,65 +1,89 @@
-@model List<MathematicsLessons.Infrastructure.Data.Entities.Sub>
+@model IEnumerable<MathematicsLessons.Infrastructure.Data.Entities.Sub>
 @{
-  ViewData["Title"] = "Premium";
-  var isSubscriber = ViewBag.IsSubscriber as bool? ?? false;
-  var loggedIn = ViewBag.IsLoggedIn as bool? ?? false;
+  ViewData["Title"] = "Plans";
+  var loggedIn = User.Identity?.IsAuthenticated == true;
+  var isSubscriber = ViewBag.IsSubscribed as bool? ?? false;
+  var currentBilling = ViewBag.BillingCycle as string;
 }
 <div class="text-center mb-4">
-  <div class="pz-pill" style="color:var(--br-primary)">Premium</div>
-  <h1 class="page-title">Level up with Premium</h1>
-  <p class="page-lead mx-auto">Unlimited courses, private lessons, and full progress tracking.</p>
+  <div class="pz-pill" style="color:var(--br-primary)">Simple pricing</div>
+  <h1 class="page-title">Choose how you learn</h1>
+  <p class="page-lead mx-auto">
+    Every new account starts on <strong>Free</strong> (3 video lessons anywhere in the catalog).
+    Upgrade with Monthly or Annual when you want unlimited courses, private tutoring, and certificates.
+  </p>
 </div>
-@if (Model == null || !Model.Any())
+
+<div class="row g-3 mb-5">
+  <div class="col-md-4">
+    <div class="card h-100">
+      <div class="card-body p-4">
+        <span class="badge-soft mb-2">Included</span>
+        <h2 class="h5">Free</h2>
+        <p class="small text-muted">Automatic when you register — no card.</p>
+        <div class="h2 fw-bold mb-3">0 <small class="fs-6 text-muted">BGN</small></div>
+        <ul class="small text-muted">
+          <li>3 video lessons of your choice</li>
+          <li>Practice exercises on those lessons</li>
+          <li>Profile, points &amp; streak</li>
+          <li>Placement quiz</li>
+        </ul>
+        @if (!loggedIn)
+        { <a class="btn btn-outline-secondary w-100" asp-area="Identity" asp-page="/Account/Register">Create free account</a> }
+        else if (!isSubscriber)
+        { <button class="btn btn-outline-secondary w-100" disabled>Your current access</button> }
+        else
+        { <span class="small text-muted">You are on a paid plan</span> }
+      </div>
+    </div>
+  </div>
+@foreach (var plan in Model.OrderBy(p => p.PricePerYear > 0 ? 1 : 0).ThenBy(p => p.PricePerMonth))
 {
-  <div class="alert alert-warning">No plans yet. Run Update-Database (CatalogSeed).</div>
-}
-else
-{
-  <div class="row g-4 justify-content-center">
-  @foreach (var plan in Model.OrderBy(p => p.PricePerMonth))
-  {
-    var isFree = plan.PricePerMonth <= 0;
-    <div class="col-md-5">
-      <div class="card h-100 @(isFree ? "" : "plan-featured")">
-        <div class="card-body d-flex flex-column p-4">
-          <div class="d-flex justify-content-between align-items-start mb-2">
-            <h2 class="h5 mb-0">@plan.Type</h2>
-            <span class="badge-soft">@(isFree ? "Free" : "Popular")</span>
-          </div>
-          <p class="text-muted small">@plan.Description</p>
-          <div class="mb-3">
-            @if (isFree)
-            { <div class="h2 mb-0 fw-bold">0 <small class="text-muted fs-6">BGN</small></div> }
-            else
-            {
-              <div class="h2 mb-0 fw-bold">@plan.PricePerMonth.ToString("0.00") <small class="text-muted fs-6">BGN/mo</small></div>
-              <div class="small text-muted">or @plan.PricePerYear.ToString("0.00") BGN/year</div>
-            }
-          </div>
-          <ul class="small text-muted mb-4">
-            @if (isFree)
-            { <li>First Beginner lesson</li><li>Progress tracking</li> }
-            else
-            {
-              <li>Unlimited learning</li>
-              <li>All courses unlocked</li>
-              <li>Private lessons</li>
-              @if (plan.IncludesPrivateSessions) { <li>Up to @plan.MaxSessionsPerMonth sessions/month</li> }
-            }
-          </ul>
-          <div class="mt-auto">
-          @if (!loggedIn)
-          { <a class="btn btn-primary w-100" asp-area="Identity" asp-page="/Account/Register">Get started</a> }
-          else if (isSubscriber && !isFree)
-          { <button class="btn btn-outline-secondary w-100" disabled>Current plan</button> }
-          else if (isFree)
-          { <a class="btn btn-outline-secondary w-100" asp-controller="Classroom" asp-action="Index">Go to courses</a> }
-          else
-          { <a class="btn btn-primary w-100" asp-action="Checkout" asp-route-planId="@plan.Id">Unlock Premium</a> }
-          </div>
+  var isAnnual = plan.Type.Contains("Annual", StringComparison.OrdinalIgnoreCase) || plan.PricePerYear > 0;
+  <div class="col-md-4">
+    <div class="card h-100 @(isAnnual ? "plan-featured" : "")">
+      <div class="card-body p-4 d-flex flex-column">
+        <span class="badge-soft mb-2">@(isAnnual ? "Best value" : "Flexible")</span>
+        <h2 class="h5">@plan.Type</h2>
+        <p class="small text-muted">@plan.Description</p>
+        @if (isAnnual)
+        {
+          <div class="h2 fw-bold mb-0">@plan.PricePerYear.ToString("0.00") <small class="fs-6 text-muted">BGN/year</small></div>
+          <div class="small text-muted mb-3">≈ @plan.PricePerMonth.ToString("0.00") BGN/mo billed yearly</div>
+        }
+        else
+        {
+          <div class="h2 fw-bold mb-3">@plan.PricePerMonth.ToString("0.00") <small class="fs-6 text-muted">BGN/month</small></div>
+        }
+        <ul class="small text-muted mb-4">
+          <li>Unlimited lessons — all levels</li>
+          <li>No sequential locks</li>
+          <li>Private 1:1 sessions</li>
+          <li>Certificates &amp; progress</li>
+          <li>Discord public Q&amp;A sessions</li>
+        </ul>
+        <div class="mt-auto">
+        @if (!loggedIn)
+        { <a class="btn btn-primary w-100" asp-area="Identity" asp-page="/Account/Register">Start free, then upgrade</a> }
+        else if (isSubscriber)
+        { <button class="btn btn-outline-secondary w-100" disabled>Subscribed</button> }
+        else
+        { <a class="btn btn-primary w-100" asp-action="Checkout" asp-route-planId="@plan.Id">Continue to PayPal</a> }
         </div>
       </div>
     </div>
-  }
   </div>
 }
+</div>
+
+<p class="section-label">What you unlock with paid access</p>
+<div class="row g-3 mb-4">
+  <div class="col-md-6"><div class="card h-100"><div class="card-body p-4">
+    <h3 class="h6 fw-bold">Jump to any topic</h3>
+    <p class="small text-muted mb-0">Already strong in algebra? Open College or Advanced without finishing Beginner. Free still limits you to three videos so you can try the platform first.</p>
+  </div></div></div>
+  <div class="col-md-6"><div class="card h-100"><div class="card-body p-4">
+    <h3 class="h6 fw-bold">Mock PayPal checkout</h3>
+    <p class="small text-muted mb-0">Checkout simulates PayPal approval for the diploma project. After “Pay”, your account gets full catalog access immediately.</p>
+  </div></div></div>
+</div>

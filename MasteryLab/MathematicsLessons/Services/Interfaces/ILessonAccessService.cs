@@ -2,9 +2,14 @@ using MathematicsLessons.Infrastructure.Data.Entities;
 
 namespace MathematicsLessons.Services.Interfaces;
 
-/// <summary>Sequential unlock rules (Khan-style mastery path).</summary>
+/// Access rules: subscribers open everything; free users get a fixed video quota.
 public interface ILessonAccessService
 {
-    bool IsLevelUnlocked(Level level, IReadOnlyList<Level> allLevels, IReadOnlyList<Lesson> allLessons, IReadOnlySet<int> completedLessonIds);
-    bool IsLessonUnlocked(Lesson lesson, IReadOnlyList<Level> allLevels, IReadOnlyList<Lesson> allLessons, IReadOnlySet<int> completedLessonIds);
+    const int FreeVideoLimit = 3;
+
+    /// Subscribers: always true. Free: true if lesson already in quota or quota not full.
+    bool CanOpenLesson(bool isSubscribed, int lessonId, IReadOnlySet<int> startedLessonIds);
+
+    /// Levels are never locked by sequence — only by free quota at lesson level.
+    bool IsLevelVisible(bool isSubscribed, Level level);
 }

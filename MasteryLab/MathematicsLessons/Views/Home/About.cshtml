@@ -1,20 +1,27 @@
-@{ ViewData["Title"] = "About"; }
-<div class="text-center mb-4">
-  <div class="pz-pill" style="color:var(--br-primary)">About</div>
-  <h1 class="page-title">MasteryLab</h1>
-  <p class="page-lead mx-auto">A focused math learning path — video lessons, practice after each step, and clear progress from grade 1 to college.</p>
-</div>
-<div class="row g-3">
-  <div class="col-md-4"><div class="card h-100"><div class="card-body p-4">
-    <h2 class="h6 fw-bold">Learn by doing</h2>
-    <p class="small text-muted mb-0">Watch, practice, unlock the next lesson.</p>
-  </div></div></div>
-  <div class="col-md-4"><div class="card h-100"><div class="card-body p-4">
-    <h2 class="h6 fw-bold">Structured paths</h2>
-    <p class="small text-muted mb-0">Beginner → Intermediate → Advanced → College.</p>
-  </div></div></div>
-  <div class="col-md-4"><div class="card h-100"><div class="card-body p-4">
-    <h2 class="h6 fw-bold">Help when stuck</h2>
-    <p class="small text-muted mb-0">Premium private lessons and Discord Q&amp;A.</p>
-  </div></div></div>
-</div>
+@{ ViewData["Title"] = "За сайта"; }
+<h1 class="page-title">За MasteryLab</h1>
+<p class="page-lead">
+  Учебна платформа по математика — дипломен проект. Целта е ученикът да намери темата бързо,
+  да гледа кратък урок и да реши задачи, а при нужда да запази час с учител.
+</p>
+
+<img class="w-100 mb-4" style="max-height:220px;object-fit:cover;border-radius:4px;border:1px solid var(--line)"
+     src="https://images.unsplash.com/photo-1456513080080-7c4d49c20f7d?w=1000&q=80" alt="Учебник и тетрадка" />
+
+<p class="section-label">За какво е</p>
+<ul class="text-muted">
+  <li>Домашна работа и подготовка за контролни</li>
+  <li>Повтаряне на пропуснат материал</li>
+  <li>Преход към по-високо ниво (вкл. колеж)</li>
+</ul>
+
+<p class="section-label">С какво е по-практичен</p>
+<ul class="text-muted">
+  <li>Безплатен пробен достъп (3 видеа), без карта</li>
+  <li>Платеният план не те кара да гледаш всичко подред</li>
+  <li>Упражнения с решения при грешка</li>
+  <li>Резервация на частен урок (само за абонати)</li>
+</ul>
+
+<a class="btn btn-primary" asp-controller="Subscription" asp-action="Plans">Цени</a>
+<a class="btn btn-outline-secondary ms-1" asp-controller="Classroom" asp-action="Index">Курсове</a>

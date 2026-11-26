@@ -1,11 +1,10 @@
 @{
-    ViewData["Title"] = "Home";
+    ViewData["Title"] = "Начало";
     var loggedIn = ViewBag.IsLoggedIn as bool? ?? (User.Identity?.IsAuthenticated == true);
     var isSub = ViewBag.IsSubscribed as bool? ?? false;
     var isAdmin = ViewBag.IsAdmin as bool? ?? User.IsInRole("Admin");
     var isTeacher = ViewBag.IsTeacher as bool? ?? User.IsInRole("Teacher");
-    var isStudent = ViewBag.IsStudent as bool? ?? User.IsInRole("Student");
-    var displayName = ViewBag.DisplayName as string ?? User.Identity?.Name ?? "Learner";
+    var displayName = ViewBag.DisplayName as string ?? User.Identity?.Name ?? "Ученик";
     var continueId = ViewBag.ContinueLessonId as int?;
     var continueTitle = ViewBag.ContinueLessonTitle as string;
     var continueLevel = ViewBag.ContinueLevelName as string;
@@ -21,258 +20,219 @@
 
 @if (!loggedIn)
 {
-    @* -------- Guest (not registered) -------- *@
     <div class="pz-hero">
         <div class="pz-hero-inner">
-            <div class="pz-pill">Your personal path for math</div>
-            <h1>Build real math intuition</h1>
+            <div class="pz-pill">Математика · 1.–12. клас и колеж</div>
+            <h1>Уроци, упражнения и учител, когато ти трябва</h1>
             <p>
-                Start from scratch, work through homework topics, and prepare for tests.
-                Short video lessons, practice after every step, and clear progress from grade 1 to college.
+                MasteryLab е сайт за учене на математика с видеа и задачи след всеки урок.
+                Регистрацията е безплатна. Можеш да гледаш три урока, после избираш месечен или годишен план.
             </p>
-            <a class="btn btn-primary me-2" asp-area="Identity" asp-page="/Account/Register">Start learning free</a>
-            <a class="btn btn-outline-secondary"
-               style="background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.4)"
-               asp-area="Identity" asp-page="/Account/Login">Log in</a>
+            <a class="btn btn-primary me-2" asp-area="Identity" asp-page="/Account/Register">Създай акаунт</a>
+            <a class="btn btn-outline-secondary" style="background:transparent;color:#fff;border-color:#8899aa"
+               asp-area="Identity" asp-page="/Account/Login">Вход</a>
         </div>
     </div>
 
-    <p class="section-label">Why MasteryLab</p>
+    <p class="section-label">За какво е направен сайтът</p>
+    <div class="row g-3 mb-3">
+        <div class="col-md-4"><div class="card h-100"><div class="card-body">
+            <h3 class="h6">Домашни и тестове</h3>
+            <p class="small text-muted mb-0">Когато нещо от училище не е ясно — отваряш темата, гледаш урока и решаваш задачите.</p>
+        </div></div></div>
+        <div class="col-md-4"><div class="card h-100"><div class="card-body">
+            <h3 class="h6">Подготовка по нива</h3>
+            <p class="small text-muted mb-0">От начален курс до колеж. Не си длъжен да минаваш всичко подред, ако вече си напреднал.</p>
+        </div></div></div>
+        <div class="col-md-4"><div class="card h-100"><div class="card-body">
+            <h3 class="h6">Помощ от човек</h3>
+            <p class="small text-muted mb-0">С платен план можеш да запазиш час с учител. Има и публични сесии във Discord.</p>
+        </div></div></div>
+    </div>
+
+    <p class="section-label">Нива и как изглежда материалът</p>
     <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card h-100"><div class="card-body p-4">
-                <div class="badge-soft mb-3">Guided</div>
-                <h3 class="h6 fw-bold">Learn in sequence</h3>
-                <p class="small text-muted mb-0">
-                    Finish a video, pass the exercises, unlock the next lesson.
-                    No random jump — a clear path so gaps do not pile up.
-                </p>
-            </div></div>
-        </div>
-        <div class="col-md-4">
-            <div class="card h-100"><div class="card-body p-4">
-                <div class="badge-soft mb-3">Practice</div>
-                <h3 class="h6 fw-bold">Exercises after every lesson</h3>
-                <p class="small text-muted mb-0">
-                    Several problems per topic — from basic arithmetic to college calculus.
-                    Miss one? See the correct solution and try again after rewatching.
-                </p>
-            </div></div>
-        </div>
-        <div class="col-md-4">
-            <div class="card h-100"><div class="card-body p-4">
-                <div class="badge-soft mb-3">Support</div>
-                <h3 class="h6 fw-bold">Help when you are stuck</h3>
-                <p class="small text-muted mb-0">
-                    Free users try the first Beginner lesson.
-                    Premium unlocks the full catalog, private lessons, and Discord Q&amp;A sessions.
-                </p>
-            </div></div>
-        </div>
-    </div>
-
-    <p class="section-label">Paths from grade 1 to college</p>
-    <p class="page-lead">
-        Four main tracks: Beginner (1–4), Intermediate (5–7), Advanced (8–12), and College.
-        Each track has sections by grade and topic — algebra, geometry, and more — with lessons you unlock step by step.
-        @(totalLessons > 0 ? $"{totalLessons} lessons" : "Dozens of lessons") are structured so you always know what comes next.
-    </p>
-
-    @if (levels != null && levels.Any())
-    {
-        <div class="row g-3 mb-4">
-        @foreach (var lv in levels)
-        {
-            <div class="col-6 col-md-3">
-                <div class="card course-card h-100 card-level">
-                    <div class="card-body">
-                        <div class="badge-soft mb-2">@lv.Name</div>
-                        <div class="small text-muted">@lv.GradeRange</div>
-                        <div class="small mt-2 fw-semibold">@lv.TopicCount sections · @lv.LessonCount lessons</div>
-                    </div>
+        <div class="col-6 col-md-3">
+            <div class="card h-100 card-level">
+                <img class="level-photo" src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&q=80" alt="Начално училище" />
+                <div class="card-body">
+                    <strong>Beginner</strong>
+                    <div class="small text-muted">1.–4. клас · числа, фигури, дроби</div>
                 </div>
             </div>
-        }
         </div>
-    }
-
-    <div class="card mb-4" style="background:var(--br-primary-soft);border-color:transparent!important">
-        <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
-            <div>
-                <h2 class="h5 mb-1 fw-bold">Try the first lesson free</h2>
-                <p class="small text-muted mb-0">
-                    Create an account — no card required. Watch the intro video, solve the exercises,
-                    and see how unlocking works. Upgrade later for every course and private tutoring.
-                </p>
+        <div class="col-6 col-md-3">
+            <div class="card h-100 card-level">
+                <img class="level-photo" src="https://images.unsplash.com/photo-1596495578065-6e0763fa1178?w=600&q=80" alt="Прогимназия" />
+                <div class="card-body">
+                    <strong>Intermediate</strong>
+                    <div class="small text-muted">5.–7. клас · проценти, уравнения</div>
+                </div>
             </div>
-            <a class="btn btn-primary" asp-area="Identity" asp-page="/Account/Register">Create account</a>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card h-100 card-level">
+                <img class="level-photo" src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&q=80" alt="Гимназия" />
+                <div class="card-body">
+                    <strong>Advanced</strong>
+                    <div class="small text-muted">8.–12. клас · алгебра, геометрия</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card h-100 card-level">
+                <img class="level-photo" src="https://images.unsplash.com/photo-1509228627152-72ae9ae6848d?w=600&q=80" alt="Колеж" />
+                <div class="card-body">
+                    <strong>College</strong>
+                    <div class="small text-muted">Висша · граници, производни</div>
+                </div>
+            </div>
         </div>
     </div>
+    @if (levels != null && levels.Any())
+    {
+        <p class="small text-muted mb-4">
+            В каталога в момента: @totalLessons урока
+            (@string.Join(", ", levels.Select(l => $"{l.Name}: {l.LessonCount}"))).
+        </p>
+    }
+
+    <p class="section-label">С какво е по-различен от други сайтове</p>
+    <div class="row g-3 mb-4">
+        <div class="col-md-6"><div class="card h-100"><div class="card-body">
+            <h3 class="h6">Не те заключва в ред, ако си платил</h3>
+            <p class="small text-muted mb-0">
+                Много платформи карат всички да гледат урок 1, после 2, после 3.
+                Тук с месечен/годишен план отваряш директно това, което ти трябва — например колеж, без да „отключваш“ начален курс.
+            </p>
+        </div></div></div>
+        <div class="col-md-6"><div class="card h-100"><div class="card-body">
+            <h3 class="h6">Упражнения след видеото</h3>
+            <p class="small text-muted mb-0">
+                Не е само гледане. След урока има задачи. Ако сбъркаш, виждаш примерно решение.
+                Безплатният акаунт стига за три видеа, за да пробваш как работи.
+            </p>
+        </div></div></div>
+        <div class="col-md-6"><div class="card h-100"><div class="card-body">
+            <h3 class="h6">Учители в самия сайт</h3>
+            <p class="small text-muted mb-0">
+                Учителите качват видеа и редактират задачи. Админът управлява потребители и цени.
+                Това не е само статични клипове от YouTube.
+            </p>
+        </div></div></div>
+        <div class="col-md-6"><div class="card h-100"><div class="card-body">
+            <h3 class="h6">Ясни цени</h3>
+            <p class="small text-muted mb-0">
+                Free при регистрация. После Monthly или Annual (демо плащане в стил PayPal за проекта).
+                Частен урок се вижда само след абонамент.
+            </p>
+        </div></div></div>
+    </div>
+
+    <p class="section-label">Често задавани въпроси</p>
+    <div class="mb-4">
+        <div class="faq-item">
+            <h3>За кого е MasteryLab?</h3>
+            <p>За ученици от 1. до 12. клас и за хора, които повтарят материал за прием или колеж. Подходящ е и ако просто искаш да запълниш празнини.</p>
+        </div>
+        <div class="faq-item">
+            <h3>Какво получавам безплатно?</h3>
+            <p>Акаунт, placement тест и три видео урока по избор. След третото видео останалото се заключва, докато не избереш платен план.</p>
+        </div>
+        <div class="faq-item">
+            <h3>Какво ще науча?</h3>
+            <p>Според нивото: аритметика и геометрия в началото; дроби, проценти и уравнения в средата; функции и подготовка за матура в горния курс; основи на анализа в College.</p>
+        </div>
+        <div class="faq-item">
+            <h3>По-добър ли е от гледане на случайни клипове?</h3>
+            <p>Клиповете са подредени по теми и класове, има задачи и прогрес. При платен план има и час с учител — нещо, което playlist в YouTube няма.</p>
+        </div>
+        <div class="faq-item">
+            <h3>Как се плаща?</h3>
+            <p>В тази учебна версия плащането е демонстрация (PayPal-стил екран). След „Approve“ акаунтът получава пълен достъп. Реална карта не се изисква в демото.</p>
+        </div>
+    </div>
+
+    <div class="card mb-3"><div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <strong>Пробвай с три безплатни урока</strong>
+            <div class="small text-muted">Без карта при регистрация.</div>
+        </div>
+        <div>
+            <a class="btn btn-primary" asp-area="Identity" asp-page="/Account/Register">Регистрация</a>
+            <a class="btn btn-outline-secondary ms-1" asp-controller="Placement" asp-action="Index">Placement тест</a>
+        </div>
+    </div></div>
 }
 else if (isAdmin)
 {
-    @* -------- Admin -------- *@
-    <div class="pz-hero" style="min-height:240px">
-        <div class="pz-hero-inner py-4">
-            <div class="pz-pill">Admin</div>
-            <h1 style="font-size:1.85rem">Welcome, @displayName</h1>
-            <p class="mb-3">
-                You manage MasteryLab: users, prices, session plans, bookings, and the full course catalog.
-                Teachers can edit content; only you control roles and global settings.
-            </p>
-            <a class="btn btn-primary me-2" asp-controller="Admin" asp-action="Index">Admin panel</a>
-            <a class="btn btn-outline-secondary" style="background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.4)"
-               asp-controller="CourseAdmin" asp-action="Index">Manage courses</a>
-        </div>
-    </div>
-    <p class="section-label">Quick actions</p>
-    <div class="row g-3 mb-4">
-        <div class="col-md-3"><div class="card h-100"><div class="card-body">
-            <h3 class="h6">Users &amp; teachers</h3>
-            <p class="small text-muted">Promote learners to Teacher by email.</p>
-            <a class="btn btn-sm btn-primary" asp-controller="Admin" asp-action="Users">Users</a>
-        </div></div></div>
-        <div class="col-md-3"><div class="card h-100"><div class="card-body">
-            <h3 class="h6">Prices</h3>
-            <p class="small text-muted">Free and Math Enthusiast plans.</p>
-            <a class="btn btn-sm btn-outline-secondary" asp-controller="Admin" asp-action="Plans">Plans</a>
-        </div></div></div>
-        <div class="col-md-3"><div class="card h-100"><div class="card-body">
-            <h3 class="h6">Bookings</h3>
-            <p class="small text-muted">Private lesson schedule.</p>
-            <a class="btn btn-sm btn-outline-secondary" asp-controller="Admin" asp-action="Bookings">Bookings</a>
-        </div></div></div>
-        <div class="col-md-3"><div class="card h-100"><div class="card-body">
-            <h3 class="h6">Learn as student</h3>
-            <p class="small text-muted">Open the catalog anytime.</p>
-            <a class="btn btn-sm btn-outline-secondary" asp-controller="Classroom" asp-action="Index">Courses</a>
-        </div></div></div>
-    </div>
+    <div class="pz-hero" style="min-height:auto"><div class="pz-hero-inner py-4">
+        <div class="pz-pill">Админ</div>
+        <h1>Здравей, @displayName</h1>
+        <p>Управление на потребители, цени, резервации и курсове.</p>
+        <a class="btn btn-primary me-2" asp-controller="Admin" asp-action="Index">Админ панел</a>
+        <a class="btn btn-outline-secondary" style="color:#fff;border-color:#8899aa" asp-controller="CourseAdmin" asp-action="Index">Курсове</a>
+    </div></div>
 }
 else if (isTeacher)
 {
-    @* -------- Teacher -------- *@
-    <div class="pz-hero" style="min-height:240px">
-        <div class="pz-hero-inner py-4">
-            <div class="pz-pill">Teacher</div>
-            <h1 style="font-size:1.85rem">Teaching dashboard</h1>
-            <p class="mb-3">
-                Upload and edit lesson videos, add sections and exercises, and follow how students progress.
-                Missing videos are listed on your teacher board so content stays complete.
-            </p>
-            <a class="btn btn-primary me-2" asp-controller="Teacher" asp-action="Dashboard">Teacher board</a>
-            <a class="btn btn-outline-secondary" style="background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.4)"
-               asp-controller="CourseAdmin" asp-action="Index">Edit courses</a>
-        </div>
-    </div>
-    <div class="row g-3 mb-4">
-        <div class="col-md-4"><div class="card h-100"><div class="card-body p-4">
-            <h3 class="h6 fw-bold">Student progress</h3>
-            <p class="small text-muted mb-2">See completed lessons, points, and per-level detail.</p>
-            <a class="btn btn-sm btn-primary" asp-controller="Teacher" asp-action="Students">Students</a>
-        </div></div></div>
-        <div class="col-md-4"><div class="card h-100"><div class="card-body p-4">
-            <h3 class="h6 fw-bold">Content</h3>
-            <p class="small text-muted mb-2">Add lessons, upload video (large files supported), manage exercises.</p>
-            <a class="btn btn-sm btn-outline-secondary" asp-controller="CourseAdmin" asp-action="Index">Manage</a>
-        </div></div></div>
-        <div class="col-md-4"><div class="card h-100"><div class="card-body p-4">
-            <h3 class="h6 fw-bold">Your learning</h3>
-            <p class="small text-muted mb-2">Teachers can also open any course for review.</p>
-            <a class="btn btn-sm btn-outline-secondary" asp-controller="Classroom" asp-action="Index">Courses</a>
-        </div></div></div>
-    </div>
+    <div class="pz-hero" style="min-height:auto"><div class="pz-hero-inner py-4">
+        <div class="pz-pill">Учител</div>
+        <h1>Преподавателски панел</h1>
+        <p>Качвай видеа, редактирай уроци и следи напредъка на учениците.</p>
+        <a class="btn btn-primary me-2" asp-controller="Teacher" asp-action="Dashboard">Табло</a>
+        <a class="btn btn-outline-secondary" style="color:#fff;border-color:#8899aa" asp-controller="CourseAdmin" asp-action="Index">Съдържание</a>
+    </div></div>
 }
 else if (isSub)
 {
-    @* -------- Premium / Math Enthusiast -------- *@
-    <div class="pz-hero" style="min-height:240px">
-        <div class="pz-hero-inner py-4">
-            <div class="pz-pill">Math Enthusiast</div>
-            <h1 style="font-size:1.85rem">Continue learning, @displayName</h1>
-            @if (continueId != null && !string.IsNullOrEmpty(continueTitle))
-            {
-                <p class="mb-1">@continueLevel@(!string.IsNullOrEmpty(continueTopic) ? " · " + continueTopic : "")</p>
-                <p class="mb-3 fw-semibold" style="color:#fff">@continueTitle</p>
-                <a class="btn btn-primary me-2" asp-controller="Classroom" asp-action="Lesson" asp-route-id="@continueId">Continue lesson</a>
-            }
-            else
-            {
-                <p class="mb-3">Full catalog unlocked — pick a path or jump to any open lesson.</p>
-            }
-            <a class="btn btn-outline-secondary" style="background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.4)"
-               asp-controller="Classroom" asp-action="Index">All courses</a>
-            <a class="btn btn-outline-secondary ms-2" style="background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.4)"
-               asp-controller="Booking" asp-action="Index">Private lesson</a>
-        </div>
-    </div>
-
+    <div class="pz-hero" style="min-height:auto"><div class="pz-hero-inner py-4">
+        <div class="pz-pill">Абонамент активен</div>
+        <h1>Продължи, @displayName</h1>
+        @if (continueId != null && !string.IsNullOrEmpty(continueTitle))
+        {
+            <p class="mb-1">@continueLevel@(!string.IsNullOrEmpty(continueTopic) ? " · " + continueTopic : "")</p>
+            <p class="mb-3"><strong>@continueTitle</strong></p>
+            <a class="btn btn-primary me-2" asp-controller="Classroom" asp-action="Lesson" asp-route-id="@continueId">Към урока</a>
+        }
+        else
+        {
+            <p class="mb-3">Целият каталог е отворен.</p>
+        }
+        <a class="btn btn-outline-secondary" style="color:#fff;border-color:#8899aa" asp-controller="Classroom" asp-action="Index">Курсове</a>
+        <a class="btn btn-outline-secondary ms-1" style="color:#fff;border-color:#8899aa" asp-controller="Booking" asp-action="Index">Частен урок</a>
+    </div></div>
     <div class="row g-3 mb-3">
-        <div class="col-md-3"><div class="card"><div class="card-body">
-            <div class="small text-muted">Completed</div><div class="h3 mb-0">@completed</div>
-        </div></div></div>
-        <div class="col-md-3"><div class="card"><div class="card-body">
-            <div class="small text-muted">Points</div><div class="h3 mb-0">@points</div>
-        </div></div></div>
-        <div class="col-md-3"><div class="card"><div class="card-body">
-            <div class="small text-muted">Day streak</div><div class="h3 mb-0">@streak</div>
-        </div></div></div>
-        <div class="col-md-3"><div class="card"><div class="card-body">
-            <div class="small text-muted">Today's goal</div>
-            <div class="h3 mb-1">@goalDone / @goalTarget</div>
-            <div class="progress"><div class="progress-bar" style="width:@((goalTarget==0?0:Math.Min(100,goalDone*100/goalTarget)))%"></div></div>
-        </div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-tile"><div class="label">Завършени</div><div class="value">@completed</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-tile"><div class="label">Точки</div><div class="value">@points</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-tile"><div class="label">Серия (дни)</div><div class="value">@streak</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-tile"><div class="label">Цел днес</div><div class="value">@goalDone / @goalTarget</div>
+            <div class="progress mt-2"><div class="progress-bar" style="width:@((goalTarget==0?0:Math.Min(100,goalDone*100/goalTarget)))%"></div></div>
+        </div></div>
     </div>
-    <p class="small text-muted mb-4">
-        Premium includes every course, private 1:1 sessions, progress tracking, certificates when a level is 100%,
-        and review of problems you missed. Keep your streak by finishing today's goal.
-        <a asp-controller="Classroom" asp-action="Review">Review weak spots</a>
-    </p>
 }
 else
 {
-    @* -------- Free registered student -------- *@
-    <div class="pz-hero" style="min-height:240px">
-        <div class="pz-hero-inner py-4">
-            <div class="pz-pill">Free plan</div>
-            <h1 style="font-size:1.85rem">Welcome, @displayName</h1>
-            <p class="mb-3">
-                Your free account unlocks the <strong>first Beginner lesson</strong>.
-                Watch the video to the end, pass the exercises, and see how MasteryLab works.
-                Upgrade to Math Enthusiast for every path, private lessons, and unlimited progress.
-            </p>
-            @if (continueId != null)
-            {
-                <a class="btn btn-primary me-2" asp-controller="Classroom" asp-action="Lesson" asp-route-id="@continueId">Open free lesson</a>
-            }
-            else
-            {
-                <a class="btn btn-primary me-2" asp-controller="Classroom" asp-action="Index">Go to courses</a>
-            }
-            <a class="btn btn-outline-secondary" style="background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.4)"
-               asp-controller="Subscription" asp-action="Plans">See Premium</a>
-        </div>
-    </div>
-
-    <div class="row g-3 mb-4">
-        <div class="col-md-4"><div class="card h-100"><div class="card-body p-4">
-            <h3 class="h6 fw-bold">What you have now</h3>
-            <p class="small text-muted mb-0">
-                First Beginner video + exercises, account profile, points and streak when you complete lessons.
-                Other courses stay locked until you subscribe.
-            </p>
+    <div class="pz-hero" style="min-height:auto"><div class="pz-hero-inner py-4">
+        <div class="pz-pill">Безплатен план</div>
+        <h1>Здравей, @displayName</h1>
+        <p>Имаш право на <strong>три видео урока</strong>. След тях каталогът се заключва, докато не избереш Monthly или Annual.</p>
+        <a class="btn btn-primary me-2" asp-controller="Classroom" asp-action="Index">Към курсовете</a>
+        <a class="btn btn-outline-secondary" style="color:#fff;border-color:#8899aa" asp-controller="Subscription" asp-action="Plans">Планове</a>
+    </div></div>
+    <div class="row g-3">
+        <div class="col-md-4"><div class="card h-100"><div class="card-body">
+            <h3 class="h6">Останали безплатни видеа</h3>
+            <p class="small text-muted mb-0">Следи колко урока вече си започнал. Лимитът е 3.</p>
         </div></div></div>
-        <div class="col-md-4"><div class="card h-100"><div class="card-body p-4">
-            <h3 class="h6 fw-bold">What Premium adds</h3>
-            <p class="small text-muted mb-0">
-                Intermediate, Advanced, College, all sections, private tutoring slots, Discord public sessions,
-                certificates, and full weak-spot review.
-            </p>
+        <div class="col-md-4"><div class="card h-100"><div class="card-body">
+            <h3 class="h6">Прогрес</h3>
+            <p class="small text-muted mb-0">Завършени: @completed · Точки: @points · Серия: @streak</p>
         </div></div></div>
-        <div class="col-md-4"><div class="card h-100"><div class="card-body p-4">
-            <h3 class="h6 fw-bold">Your stats</h3>
-            <p class="small text-muted mb-1">Completed: <strong>@completed</strong> · Points: <strong>@points</strong></p>
-            <p class="small text-muted mb-0">Streak: <strong>@streak</strong> days · Goal today: @goalDone / @goalTarget</p>
+        <div class="col-md-4"><div class="card h-100"><div class="card-body">
+            <h3 class="h6">Пълен достъп</h3>
+            <p class="small text-muted mb-2">Всички нива + частен урок.</p>
+            <a class="btn btn-sm btn-primary" asp-controller="Subscription" asp-action="Plans">Виж цените</a>
         </div></div></div>
     </div>
 }

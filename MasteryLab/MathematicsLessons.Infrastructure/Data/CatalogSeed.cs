@@ -27,18 +27,19 @@ public static class CatalogSeed
 
     public static void Apply(ModelBuilder modelBuilder)
     {
+                // Paid plans only. Free access = SubId null on the user (automatic on register).
         modelBuilder.Entity<Sub>().HasData(
             new Sub
             {
-                Id = 1, Type = "Free", PricePerMonth = 0, PricePerYear = 0,
-                Description = "First Beginner lesson free",
-                IncludesPrivateSessions = false, MaxSessionsPerMonth = 0
+                Id = 1, Type = "Monthly", PricePerMonth = 19.99m, PricePerYear = 0,
+                Description = "Full catalog, private lessons, certificates — billed every month.",
+                IncludesPrivateSessions = true, MaxSessionsPerMonth = 8
             },
             new Sub
             {
-                Id = 2, Type = "Math Enthusiast", PricePerMonth = 19.99m, PricePerYear = 199m,
-                Description = "Full access to all courses and private lessons",
-                IncludesPrivateSessions = true, MaxSessionsPerMonth = 8
+                Id = 2, Type = "Annual", PricePerMonth = 14.99m, PricePerYear = 149.90m,
+                Description = "Same full access as Monthly, better price when you pay for the year.",
+                IncludesPrivateSessions = true, MaxSessionsPerMonth = 12
             });
 
         modelBuilder.Entity<AppointmentPlan>().HasData(
